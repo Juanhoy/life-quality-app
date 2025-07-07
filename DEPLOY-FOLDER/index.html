@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Life Quality Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata"></script>
+</head>
+
+<body>
+    <div class="gencontainer" id="mainView">
+        <div class="leftcontainer">
+            <button id="profileBtn" class="user-info-button">
+                <div class="user-info">
+                    <img id="userImage" src="path_to_user_image.jpg" alt="User Image" />
+                    <h2 id="userName"></h2>
+                </div>
+            </button>
+            <nav>
+                <ul>
+                    <li data-target="lifeVisualizationPage"><a href="#"><i class="fas fa-rocket"></i> <span data-i18n="nav_life_visualization"></span></a></li>
+                    <li data-target="lifeBalancePage" class="active"><a href="#"><i class="fas fa-yin-yang"></i> <span data-i18n="nav_life_balance"></span></a></li>
+                    <li data-target="lifeRolesPage"><a href="#"><i class="fas fa-user"></i> <span data-i18n="nav_life_roles"></span></a></li>
+                    <li data-target="lifeResourcesPage"><a href="#"><i class="fas fa-briefcase"></i> <span data-i18n="nav_life_resources"></span></a></li>
+                </ul>
+            </nav>
+            <div class="nav-footer">
+                <button id="optionsBtn" class="secondary-btn options-btn"><i class="fas fa-cog"></i> <span data-i18n="nav_options"></span></button>
+                <div class="button-group">
+                    <button id="saveDataBtn" class="primary-btn"><i class="fas fa-arrow-down-to-bracket"></i> <span data-i18n="btn_save_data"></span></button>
+                    <button id="loadDataBtn" class="secondary-btn"><i class="fas fa-arrow-up-from-bracket"></i> <span data-i18n="btn_load_data"></span></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="rightcontainer">
+
+           <div id="lifeVisualizationPage" class="page" style="display: none;">
+    <div class="vis-toolbar">
+        <button id="uploadImageBtn" class="primary-btn"><i class="fas fa-upload"></i> Upload Image</button>
+        <div class="vis-instructions">
+            <span><kbd>Space</kbd> + Drag to Pan</span>
+            <span><kbd>Ctrl</kbd> + Scroll to Zoom</span>
+        </div>
+    </div>
+
+    <div id="visViewport">
+        <div id="visArtboard">
+            </div>
+    </div>
+
+    <input type="file" id="imageUploader" accept="image/*" style="display: none;" />
+</div>
+
+            <div id="lifeBalancePage" class="page">
+                <div class="dashboard-container">
+                    <div class="left-section">
+                        <h3 data-i18n="title_life_quality"></h3>
+                        <p id="lifeQualityText"></p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                        <div id="inputsContainer">
+                             <div id="inputs"></div>
+                        </div>
+                    </div>
+
+                    <div class="right-section">
+                        <div id="dimensionNav" class="dimension-nav">
+                            <ul id="dimensionNavList"></ul>
+                        </div>
+                        <div id="librarySection" class="library-section">
+                            <h3 id="selectedDimensionTitle"></h3>
+                            <div class="library-tabs">
+                                <ul>
+                                    <li data-tab="challenges" data-i18n="tab_challenges"></li>
+                                    <li data-tab="goals" class="active" data-i18n="tab_goals"></li>
+                                    <li data-tab="projects" data-i18n="tab_projects"></li>
+                                    <li data-tab="routines" data-i18n="tab_routines"></li>
+                                </ul>
+                            </div>
+                            <div class="library-content">
+                                <div id="tab-challenges" class="tab-content"><div id="challengesList" class="library-list"></div><div class="add-item-container"><input type="text" id="newChallengeInput" data-i18n-placeholder="ph_add_challenge"><div class="custom-select-container" id="newChallengeImportanceContainer"></div><div class="custom-select-container" id="newChallengeRolesContainer"></div><button id="addChallengeBtn" data-i18n="btn_add"></button></div></div>
+                                <div id="tab-goals" class="tab-content active"><div id="goalsList" class="library-list"></div><div class="add-item-container"><input type="text" id="newGoalInput" data-i18n-placeholder="ph_goal_name"><input type="number" id="newGoalStatusInput" data-i18n-placeholder="ph_status_done" min="0" max="100"><input type="date" id="newGoalDueDateInput"><div class="custom-select-container" id="newGoalImportanceContainer"></div><div class="custom-select-container" id="newGoalRolesContainer"></div><button id="addGoalBtn" data-i18n="btn_add"></button></div></div>
+                                <div id="tab-projects" class="tab-content"><div id="projectsList" class="library-list"></div><div class="add-item-container"><input type="text" id="newProjectInput" data-i18n-placeholder="ph_project_name"><input type="number" id="newProjectStatusInput" data-i18n-placeholder="ph_status_done" min="0" max="100"><div class="custom-select-container" id="newProjectImportanceContainer"></div><input type="date" id="newProjectDueDateInput"><div class="custom-select-container" id="newProjectGoalContainer"></div><div class="custom-select-container" id="newProjectRolesContainer"></div><button id="addProjectBtn" data-i18n="btn_add"></button></div></div>
+                                <div id="tab-routines" class="tab-content"><h4 data-i18n="subtitle_daily"></h4><div id="dailyRoutinesList" class="library-list"></div><div class="add-item-container"><input type="text" id="newDailyRoutineInput" data-i18n-placeholder="ph_routine_name"><div class="custom-select-container" id="newDailyRoutineImportanceContainer"></div><div class="custom-select-container" id="newDailyRoutineGoalContainer"></div><div class="custom-select-container" id="newDailyRoutineRolesContainer"></div><button id="addDailyRoutineBtn" data-i18n="btn_add"></button></div><h4 data-i18n="subtitle_weekly"></h4><div id="weeklyRoutinesList" class="library-list"></div><div class="add-item-container"><input type="text" id="newWeeklyRoutineInput" data-i18n-placeholder="ph_routine_name"><div class="custom-select-container" id="newWeeklyRoutineImportanceContainer"></div><div class="custom-select-container" id="newWeeklyRoutineGoalContainer"></div><div class="custom-select-container" id="newWeeklyRoutineRolesContainer"></div><button id="addWeeklyRoutineBtn" data-i18n="btn_add"></button></div><h4 data-i18n="subtitle_monthly"></h4><div id="monthlyRoutinesList" class="library-list"></div><div class="add-item-container"><input type="text" id="newMonthlyRoutineInput" data-i18n-placeholder="ph_routine_name"><div class="custom-select-container" id="newMonthlyRoutineImportanceContainer"></div><div class="custom-select-container" id="newMonthlyRoutineGoalContainer"></div><div class="custom-select-container" id="newMonthlyRoutineRolesContainer"></div><button id="addMonthlyRoutineBtn" data-i18n="btn_add"></button></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="lifeRolesPage" class="page" style="display: none;">
+                <div class="page-header">
+                    <h2><i class="fas fa-user"></i> <span data-i18n="nav_life_roles"></span></h2>
+                    <button id="manageRolesBtn" class="primary-btn"><i class="fas fa-edit"></i> <span data-i18n="btn_manage_roles"></span></button>
+                </div>
+                <div id="lifeRolesContent" class="roles-grid"></div>
+            </div>
+
+            <div id="lifeResourcesPage" class="page" style="display: none;">
+                <div class="page-header"><h2><i class="fas fa-briefcase"></i> <span data-i18n="nav_life_resources"></span></h2></div>
+                <div id="resourcesContent" class="inventory-grid"></div>
+            </div>
+
+            <div id="manageRolesPage" class="page" style="display: none;">
+                <div class="page-header">
+                    <h2 class="breadcrumb">
+                        <a href="#" id="backToRolesPageLink"><i class="fas fa-arrow-left"></i> <span data-i18n="nav_life_roles"></span></a> / <span data-i18n="title_manage_roles"></span>
+                    </h2>
+                </div>
+                <div class="roles-management-container">
+                    <div class="roles-column">
+                        <h4 data-i18n="title_available_roles">Available Roles</h4>
+                        <input type="text" id="roleLibrarySearch" data-i18n-placeholder="ph_search_roles" placeholder="Search roles...">
+                        <ul id="roleLibraryList" class="role-list"></ul>
+                    </div>
+                    <div class="roles-column">
+                        <h4 data-i18n="title_active_roles">Your Active Roles</h4>
+                        <ul id="userRoleList" class="role-list"></ul>
+                        <div class="add-item-container" style="margin-top: auto;">
+                            <input type="text" id="newCustomRoleInput" data-i18n-placeholder="ph_create_custom_role" placeholder="Create custom role...">
+                            <button id="addCustomRoleBtn" data-i18n="btn_add">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resourceCategoryDetailPage" class="page" style="display: none;"></div>
+            <div id="financialsDetailPage" class="page" style="display: none;"></div>
+            <div id="itemDetailPage" class="page" style="display: none;">
+                 <div class="page-header">
+                    <h2 class="breadcrumb">
+                        <a href="#" id="backToOriginLink">&larr; Back</a> / <span id="itemDetailTitle">Edit Item</span>
+                    </h2>
+                </div>
+                <div id="itemDetailFormContainer">
+                    </div>
+                <div class="modal-actions">
+                    <button id="saveItemDetailBtn" class="primary-btn" data-i18n="btn_save">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="profileModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3 data-i18n="title_edit_profile"></h3>
+            <div class="resource-modal-fields">
+                <div class="resource-image-upload">
+                    <img id="profileImagePreview" src="path_to_user_image.jpg" alt="Profile Image Preview">
+                    <input type="file" id="profileImageInput" accept="image/*">
+                    <label for="profileImageInput" class="secondary-btn" data-i18n="btn_upload_image"></label>
+                </div>
+                <div class="resource-form-inputs">
+                    <label><span data-i18n="label_name"></span>: <input type="text" id="profileNameInput"></label>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="saveProfileBtn" class="primary-btn" data-i18n="btn_save"></button>
+                <button id="cancelProfileBtn" class="secondary-btn" data-i18n="btn_cancel"></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="resourceModal" class="modal-overlay" style="display: none;"><div class="modal-content"><h3 id="resourceModalTitle"></h3><div id="resourceModalFields" class="resource-modal-fields"><div class="resource-image-upload"><img id="resourceImagePreview" src="https://via.placeholder.com/150" alt="Resource Image Preview"><input type="file" id="resourceImageInput" accept="image/*"><label for="resourceImageInput" class="secondary-btn" data-i18n="btn_upload_image"></label></div><div class="resource-form-inputs"><label><span data-i18n="label_name"></span>: <input type="text" id="resourceNameInput"></label><label><span data-i18n="label_category"></span>: <input type="text" id="resourceCategoryInput" disabled></label><label><span data-i18n="label_description"></span>: <textarea id="resourceDescriptionInput"></textarea></label><label><span data-i18n="label_value"></span>: <input type="number" id="resourceValueInput"></label><label><span data-i18n="label_purchase_date"></span>: <input type="date" id="resourceDateInput"></label></div></div><div class="modal-actions"><button id="saveResourceBtn" class="primary-btn" data-i18n="btn_save"></button><button id="deleteResourceBtn" class="danger-btn" style="display: none;" data-i18n="btn_delete"></button><button id="cancelResourceBtn" class="secondary-btn" data-i18n="btn_cancel"></button></div></div></div>
+    <div id="financialItemModal" class="modal-overlay" style="display: none;"><div class="modal-content"><h3 id="financialModalTitle"></h3><div class="resource-form-inputs" style="padding-top: 15px;"><label><span data-i18n="label_name"></span>: <input type="text" id="financialNameInput"></label><label><span data-i18n="label_amount"></span>: <input type="number" id="financialAmountInput"></label><label><span data-i18n="label_date"></span>: <input type="date" id="financialDateInput"></label></div><div class="modal-actions"><button id="saveFinancialItemBtn" class="primary-btn" data-i18n="btn_save"></button><button id="deleteFinancialItemBtn" class="danger-btn" style="display: none;" data-i18n="btn_delete"></button><button id="cancelFinancialItemBtn" class="secondary-btn" data-i18n="btn_cancel"></button></div></div></div>
+    <div id="optionsModal" class="modal-overlay" style="display: none;"><div class="modal-content"><h3 data-i18n="nav_options"></h3><div class="options-container"><div class="option-item"><label for="themeToggle" data-i18n="label_color_theme"></label><div class="toggle-switch"><input type="checkbox" id="themeToggle"><label for="themeToggle" class="slider"></label></div></div><div class="option-item"><label for="languageSelector" data-i18n="label_language"></label><select id="languageSelector"><option value="en">English</option><option value="es">Español</option></select></div></div><div class="modal-actions"><button id="closeOptionsBtn" class="primary-btn" data-i18n="btn_done"></button></div></div></div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
