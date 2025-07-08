@@ -477,14 +477,17 @@ function renderLibrary(dimension, tab) {
             });
         }
 
-        div.querySelector(".menu-icon").addEventListener("click", (e) => {
-            e.stopPropagation();
-            const menuActions = [
-                {label: getTranslation('title_edit'), action: () => showPage('itemDetailPage', context)},
-                {label: getTranslation('btn_delete'), action: () => deleteItem(dimension, type + 's', index, frequency), className: 'delete-btn'}
-            ];
-            showContextMenu(e.target, menuActions);
-        });
+        const menuIcon = div.querySelector(".menu-icon");
+        if(menuIcon) {
+            menuIcon.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const menuActions = [
+                    {label: getTranslation('title_edit'), action: () => showPage('itemDetailPage', context)},
+                    {label: getTranslation('btn_delete'), action: () => deleteItem(dimension, type + 's', index, frequency), className: 'delete-btn'}
+                ];
+                showContextMenu(e.target, menuActions);
+            });
+        }
 
         const listId = frequency ? `${frequency}RoutinesList` : `${type}sList`;
         if(document.getElementById(listId)) document.getElementById(listId).appendChild(div);
@@ -506,7 +509,6 @@ function createLibraryItem(type, title, roles, details = '', skills = '', compli
     div.className = `library-item ${type}-card`;
 
     if (type === 'routine') {
-        // Special layout for routine cards to group the actions
         div.innerHTML = `
             <div class="card-actions-container">
                 ${compliance}
@@ -517,7 +519,6 @@ function createLibraryItem(type, title, roles, details = '', skills = '', compli
             ${roles}
             ${skills}`;
     } else {
-        // Original layout for all other cards
         div.innerHTML = `
             <i class="fas fa-ellipsis-h menu-icon"></i>
             <div class="card-title">${title}</div>
@@ -830,7 +831,7 @@ function createSkillCard(role, skills) {
     card.innerHTML = `
         <div class="skill-header">
             <h3><i class="fas ${role.icon}"></i> ${getTranslation(role.key)}</h3>
-            <button class="primary-btn add-skill-btn" data-role-key="${role.key}" data-i18n="btn_add_skill"></button>
+            <button class="btn primary-btn add-skill-btn" data-role-key="${role.key}" data-i18n="btn_add_skill"></button>
         </div>
         ${skillsHtml}
     `;
@@ -1170,8 +1171,8 @@ function renderResourceCategoryPage(context) {
     const { categoryName, translationKey } = context;
     const page = document.getElementById('resourceCategoryDetailPage');
 
-    page.innerHTML = `<div class="page-header"><h2 class="breadcrumb"><a href="#" id="backBtn"><i class="fas fa-arrow-left"></i> <span data-i18n="nav_life_resources"></span></a> / <span>${getTranslation(translationKey)}</span></h2><button id="addNewResourceItemBtn" class="primary-btn"><i class="fas fa-plus"></i> <span data-i18n="btn_add_item"></span></button></div><div id="resourceItemGrid" class="inventory-grid"></div>`;
-
+    page.innerHTML = `<div class="page-header"><h2 class="breadcrumb"><a href="#" id="backBtn"><i class="fas fa-arrow-left"></i> <span data-i18n="nav_life_resources"></span></a> / <span>${getTranslation(translationKey)}</span></h2><button id="addNewResourceItemBtn" class="btn primary-btn"><i class="fas fa-plus"></i> <span data-i18n="btn_add_item"></span></button></div><div id="resourceItemGrid" class="inventory-grid"></div>`;
+    
     const itemGrid = page.querySelector('#resourceItemGrid');
     const items = dimensionLibraryData.resources.filter(r => (r.category || 'Uncategorized') === categoryName);
 
@@ -1223,11 +1224,11 @@ function renderFinancialsPage() {
             <p class="balance-amount">$${totalBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
         </div>
         <div class="financials-grid">
-            <div class="financial-column" data-type="incomes"><h3><i class="fas fa-arrow-down"></i> <span data-i18n="incomes"></span></h3><ul></ul><button class="secondary-btn add-financial-btn" data-i18n="btn_add_income"></button></div>
-            <div class="financial-column" data-type="expenses"><h3><i class="fas fa-arrow-up"></i> <span data-i18n="expenses"></span></h3><ul></ul><button class="secondary-btn add-financial-btn" data-i18n="btn_add_expense"></button></div>
-            <div class="financial-column" data-type="savings"><h3><i class="fas fa-piggy-bank"></i> <span data-i18n="savings"></span></h3><ul></ul><button class="secondary-btn add-financial-btn" data-i18n="btn_add_saving"></button></div>
-            <div class="financial-column" data-type="investments"><h3><i class="fas fa-chart-line"></i> <span data-i18n="investments"></span></h3><ul></ul><button class="secondary-btn add-financial-btn" data-i18n="btn_add_investment"></button></div>
-            <div class="financial-column" data-type="debts"><h3><i class="fas fa-file-invoice-dollar"></i> <span data-i18n="debts"></span></h3><ul></ul><button class="secondary-btn add-financial-btn" data-i18n="btn_add_debt"></button></div>
+            <div class="financial-column" data-type="incomes"><h3><i class="fas fa-arrow-down"></i> <span data-i18n="incomes"></span></h3><ul></ul><button class="btn secondary-btn add-financial-btn" data-i18n="btn_add_income"></button></div>
+            <div class="financial-column" data-type="expenses"><h3><i class="fas fa-arrow-up"></i> <span data-i18n="expenses"></span></h3><ul></ul><button class="btn secondary-btn add-financial-btn" data-i18n="btn_add_expense"></button></div>
+            <div class="financial-column" data-type="savings"><h3><i class="fas fa-piggy-bank"></i> <span data-i18n="savings"></span></h3><ul></ul><button class="btn secondary-btn add-financial-btn" data-i18n="btn_add_saving"></button></div>
+            <div class="financial-column" data-type="investments"><h3><i class="fas fa-chart-line"></i> <span data-i18n="investments"></span></h3><ul></ul><button class="btn secondary-btn add-financial-btn" data-i18n="btn_add_investment"></button></div>
+            <div class="financial-column" data-type="debts"><h3><i class="fas fa-file-invoice-dollar"></i> <span data-i18n="debts"></span></h3><ul></ul><button class="btn secondary-btn add-financial-btn" data-i18n="btn_add_debt"></button></div>
         </div>`;
 
     for (const type in financials) {
