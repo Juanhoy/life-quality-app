@@ -50,7 +50,7 @@ body {
 /* ---------------------------- */
 /* INTERACTIVE ELEMENTS         */
 /* ---------------------------- */
-input, textarea, select, button {
+input, textarea, select {
     background-color: var(--bg-secondary);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
@@ -75,30 +75,63 @@ input[type=number]::-webkit-outer-spin-button {
 }
 input[type=number] { -moz-appearance: textfield; }
 
-/* General Button Styles */
-button { cursor: pointer; }
+/* General Button Base Class */
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px;
+    margin: 0;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    box-sizing: border-box;
+}
 
+/* Specific Button Styles */
 .primary-btn {
     background-color: var(--accent-primary);
     color: white;
-    border: none;
+    border-color: var(--accent-primary);
     font-weight: 500;
 }
-.primary-btn:hover { opacity: 0.85; }
+.primary-btn:hover { 
+    opacity: 0.85; 
+}
 
 .secondary-btn {
     background-color: var(--bg-tertiary);
     color: var(--text-primary);
-    border: 1px solid var(--border-color);
+    border-color: var(--border-color);
 }
-.secondary-btn:hover { background-color: var(--border-color); }
+.secondary-btn:hover { 
+    background-color: var(--border-color); 
+}
 
 .danger-btn {
     background-color: var(--danger-color);
     color: white;
-    border: none;
+    border-color: var(--danger-color);
 }
-.danger-btn:hover { opacity: 0.85; }
+.danger-btn:hover { 
+    opacity: 0.85; 
+}
+
+.secondary-btn-positive {
+    background-color: transparent;
+    border-color: var(--accent-secondary);
+    color: var(--accent-secondary);
+}
+.secondary-btn-positive:hover {
+    background-color: var(--accent-secondary);
+    color: white;
+}
 
 
 /* ---------------------------- */
@@ -165,9 +198,8 @@ nav ul li.active { background: var(--accent-primary); }
 nav ul li.active a { color: white; }
 
 .nav-footer { margin-top: 30px; display: flex; flex-direction: column; gap: 10px; }
-.options-btn { margin-bottom: 10px; }
 .button-group { display: flex; flex-direction: column; gap: 10px; }
-.button-group button { width: 100%; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
 
 /* ---------------------------- */
 /* DASHBOARD (LIFE BALANCE)     */
@@ -237,7 +269,7 @@ nav ul li.active a { color: white; }
     border: none;
 }
 /* ---------------------------- */
-/* "AAA Game" - LIFE ROLES PAGE */
+/* LIFE ROLES & SKILLS PAGES    */
 /* ---------------------------- */
 .roles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
 .role-card { background: var(--bg-secondary); border-radius: 12px; padding: 20px; text-align: left; }
@@ -248,13 +280,11 @@ nav ul li.active a { color: white; }
 .role-header-actions .fas { font-size: 1rem; color: var(--text-secondary); cursor: pointer; transition: color 0.2s; }
 .role-header-actions .fas:hover { color: var(--text-primary); }
 
-
 .role-card ul { list-style-type: none; padding: 0; margin: 0; }
 .role-card li { background: var(--bg-tertiary); padding: 8px 12px; border-radius: 4px; margin-bottom: 6px; font-size: 0.9rem; }
 .role-card .item-category { font-size: 0.75rem; color: var(--text-secondary); float: right; }
 .role-card .no-items { color: var(--text-secondary); font-style: italic; }
 
-/* Styles for enhanced Roles page */
 .role-card li {
     padding: 10px 15px;
     margin-bottom: 8px;
@@ -269,8 +299,65 @@ nav ul li.active a { color: white; }
 .role-card li.project-item { border-left-color: #ff9800; }
 .role-card li.routine-item { border-left-color: #9c27b0; }
 
+.skill-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 20px;
+}
+.skill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+.skill-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+.skill-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.skill-item {
+    background: var(--bg-tertiary);
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+.skill-item:hover {
+    transform: translateY(-2px);
+    background-color: var(--border-color);
+}
+.skill-details {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+.card-skills {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.skill-tag {
+    background-color: var(--accent-secondary);
+    color: #ffffff;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
 /* ---------------------------- */
-/* "AAA Game" - LIFE RESOURCES  */
+/* LIFE RESOURCES  */
 /* ---------------------------- */
 .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
 .resource-category-card {
@@ -417,6 +504,16 @@ nav ul li.active a { color: white; }
     margin-bottom: 20px;
 }
 
+.expanded-item-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 25px;
+}
+
+
 /* ---------------------------- */
 /* MODALS                       */
 /* ---------------------------- */
@@ -457,6 +554,56 @@ nav ul li.active a { color: white; }
 .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: var(--toggle-handle-color); transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: var(--accent-primary); }
 input:checked + .slider:before { transform: translateX(26px); }
+
+.compliance-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+.compliance-toggle-container .toggle-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+.compliance-toggle-container .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+.compliance-toggle-container .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.compliance-toggle-container .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-tertiary);
+    transition: .4s;
+    border-radius: 24px;
+}
+.compliance-toggle-container .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--toggle-handle-color);
+    transition: .4s;
+    border-radius: 50%;
+}
+.compliance-toggle-container input:checked + .slider {
+    background-color: var(--accent-secondary);
+}
+.compliance-toggle-container input:checked + .slider:before {
+    transform: translateX(20px);
+}
 
 /* Roles Management Page */
 .roles-management-container {
@@ -637,11 +784,10 @@ input:checked + .slider:before { transform: translateX(26px); }
 /* LIFE VISUALIZATION PAGE      */
 /* ---------------------------- */
 
-/* Make the page container a flex column to position the toolbar and viewport */
 #lifeVisualizationPage {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 40px); /* Full viewport height minus body padding */
+    height: calc(100vh - 40px);
     gap: 15px;
 }
 
@@ -667,46 +813,40 @@ input:checked + .slider:before { transform: translateX(26px); }
     font-family: monospace;
 }
 
-/* The viewport is the visible container for our artboard. */
 #visViewport {
     width: 100%;
     height: 100%;
     background-color: #000000;
-    overflow: hidden; /* This is crucial! It clips the artboard. */
-    position: relative; /* Needed for positioning child elements. */
+    overflow: hidden;
+    position: relative;
     border-radius: 12px;
     cursor: default;
-    /* The grid is now on the viewport for consistent scaling */
     background-image:
         linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
 }
 
 #visViewport.panning {
-    cursor: grabbing; /* Cursor when actively panning */
+    cursor: grabbing;
 }
 
-/* The artboard is the massive space where content lives. */
 #visArtboard {
     width: 7000px;
     height: 7000px;
-    position: relative; /* Allows absolute positioning of images inside. */
+    position: relative;
     background-color: #000000;
-    transform-origin: 0 0; /* Sets the point for zoom and pan transforms. */
+    transform-origin: 0 0;
 }
 
-/* This is a wrapper for the image and its controls */
 .image-container {
     position: absolute;
 }
 
-/* Styles for the images placed on the artboard. */
 .visualization-image {
     display: block;
     width: 100%;
     height: 100%;
     cursor: grab;
-    /* FIX: Add a transparent border to prevent layout shift on hover/selection */
     border: 3px solid transparent;
     transition: border-color 0.2s ease-in-out;
 }
@@ -716,14 +856,11 @@ input:checked + .slider:before { transform: translateX(26px); }
     cursor: grabbing;
 }
 
-/* NEW: Add a border on hover and when selected for clear feedback */
 .image-container:hover .visualization-image,
 .image-container.selected .visualization-image {
     border-color: var(--accent-primary);
 }
 
-
-/* Styles for the resize handles */
 .resize-handle {
     position: absolute;
     width: 12px;
@@ -731,12 +868,10 @@ input:checked + .slider:before { transform: translateX(26px); }
     background-color: var(--accent-primary);
     border: 2px solid var(--bg-secondary);
     border-radius: 50%;
-    /* Handles are hidden by default */
     display: none;
     z-index: 1001;
 }
 
-/* Show handles only when the container is selected */
 .image-container.selected .resize-handle {
     display: block;
 }
@@ -745,140 +880,3 @@ input:checked + .slider:before { transform: translateX(26px); }
 .resize-handle.top-right { top: -9px; right: -9px; cursor: nesw-resize; }
 .resize-handle.bottom-left { bottom: -9px; left: -9px; cursor: nesw-resize; }
 .resize-handle.bottom-right { bottom: -9px; right: -9px; cursor: nwse-resize; }
-
-/* ---------------------------- */
-/* LIFE SKILLS PAGE             */
-/* ---------------------------- */
-.skill-card {
-    background: var(--bg-secondary);
-    border-radius: 12px;
-    padding: 20px;
-}
-
-.skill-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.skill-header h3 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 500;
-}
-
-.skill-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.skill-item {
-    background: var(--bg-tertiary);
-    padding: 12px 15px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-}
-
-.skill-details {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 8px;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-
-/* Add cursor and transition to skill items */
-.skill-item {
-    background: var(--bg-tertiary);
-    padding: 12px 15px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    cursor: pointer; /* Indicates the item is clickable */
-    transition: background-color 0.2s, transform 0.2s;
-}
-
-/* Add a hover effect similar to other library items */
-.skill-item:hover {
-    transform: translateY(-2px);
-    background-color: var(--border-color);
-}
-
-/* Style for skill tags on project/routine cards */
-.card-skills {
-    margin-top: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.skill-tag {
-    background-color: var(--accent-secondary); /* A different color to distinguish from roles */
-    color: #ffffff;
-    padding: 2px 8px;
-    font-size: 0.75rem;
-    border-radius: 10px;
-    font-weight: 500;
-}
-
-/* Container for the compliance toggle on a library card */
-.compliance-toggle-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 8px;
-}
-
-.compliance-toggle-container .toggle-label {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-}
-
-/* Re-using the toggle switch from the options modal, but making it smaller */
-.compliance-toggle-container .toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 44px; /* Smaller width */
-    height: 24px; /* Smaller height */
-}
-
-.compliance-toggle-container .toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.compliance-toggle-container .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--bg-tertiary);
-    transition: .4s;
-    border-radius: 24px;
-}
-
-.compliance-toggle-container .slider:before {
-    position: absolute;
-    content: "";
-    height: 18px; /* Smaller handle */
-    width: 18px;  /* Smaller handle */
-    left: 3px;
-    bottom: 3px;
-    background-color: var(--toggle-handle-color);
-    transition: .4s;
-    border-radius: 50%;
-}
-
-.compliance-toggle-container input:checked + .slider {
-    background-color: var(--accent-secondary); /* Green for 'done' */
-}
-
-.compliance-toggle-container input:checked + .slider:before {
-    transform: translateX(20px); /* Adjusted for smaller size */
-}

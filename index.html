@@ -29,14 +29,14 @@
                 </ul>
             </nav>
             <div class="nav-footer">
-                <button id="optionsBtn" class="secondary-btn options-btn"><i class="fas fa-cog"></i> <span data-i18n="nav_options"></span></button>
-                <div class="button-group">
-    <button id="saveDataBtn" class="primary-btn"><i class="fas fa-arrow-down-to-bracket"></i> <span data-i18n="btn_save_data"></span></button>
-    <a href="https://www.paypal.com/paypalme/juanjhoy" target="_blank" rel="noopener noreferrer" class="secondary-btn">
-        <i class="fab fa-paypal"></i> <span data-i18n="btn_donate"></span>
-    </a>
+    <button id="optionsBtn" class="btn secondary-btn options-btn"><i class="fas fa-cog"></i> <span data-i18n="nav_options"></span></button>
+    <div class="button-group">
+        <button id="saveDataBtn" class="btn primary-btn"><i class="fas fa-arrow-down-to-bracket"></i> <span data-i18n="btn_save_data"></span></button>
+        <a href="YOUR_PAYPAL_LINK_HERE" target="_blank" rel="noopener noreferrer" class="btn secondary-btn-positive">
+            <i class="fas fa-heart"></i> <span data-i18n="btn_donate"></span>
+        </a>
+    </div>
 </div>
-            </div>
         </div>
 
         <div class="rightcontainer">
@@ -106,6 +106,58 @@
                 </div>
                 <div id="lifeRolesContent" class="roles-grid"></div>
             </div>
+
+<div id="expandedRolePage" class="page" style="display: none;">
+    <div class="page-header">
+        <h2 class="breadcrumb">
+            <a href="#" id="backToRolesFromExpandedLink"><i class="fas fa-arrow-left"></i> <span data-i18n="nav_life_roles"></span></a> / <span id="expandedRoleTitle"></span>
+        </h2>
+    </div>
+
+    <div class="library-section" style="padding: 0;">
+        <div class="library-tabs">
+            <ul>
+                <li data-tab="goals" class="active" data-i18n="tab_goals"></li>
+                <li data-tab="challenges" data-i18n="tab_challenges"></li>
+                <li data-tab="projects" data-i18n="tab_projects"></li>
+                <li data-tab="routines" data-i18n="tab_routines"></li>
+                <li data-tab="skills" data-i18n="nav_life_skills"></li>
+            </ul>
+        </div>
+        <div class="library-content">
+            <div id="tab-goals" class="tab-content active" style="flex-direction: column; gap: 15px;">
+                <div class="expanded-item-list" id="expanded-goals-list"></div>
+                <h4 data-i18n="title_add_new"></h4>
+                <div class="add-item-container"><input type="text" id="expandedNewGoalInput" data-i18n-placeholder="ph_goal_name"><input type="number" id="expandedNewGoalStatusInput" data-i18n-placeholder="ph_status_done" min="0" max="100"><input type="date" id="expandedNewGoalDueDateInput"><div class="custom-select-container" id="expandedNewGoalImportanceContainer"></div><button id="expandedAddGoalBtn" class="primary-btn" data-i18n="btn_add"></button></div>
+                <p class="feedback-message" id="goalFeedback"></p>
+            </div>
+            <div id="tab-challenges" class="tab-content" style="flex-direction: column; gap: 15px;">
+                <div class="expanded-item-list" id="expanded-challenges-list"></div>
+                <h4 data-i18n="title_add_new"></h4>
+                <div class="add-item-container"><input type="text" id="expandedNewChallengeInput" data-i18n-placeholder="ph_add_challenge"><div class="custom-select-container" id="expandedNewChallengeImportanceContainer"></div><button id="expandedAddChallengeBtn" class="primary-btn" data-i18n="btn_add"></button></div>
+                <p class="feedback-message" id="challengeFeedback"></p>
+            </div>
+            <div id="tab-projects" class="tab-content" style="flex-direction: column; gap: 15px;">
+                <div class="expanded-item-list" id="expanded-projects-list"></div>
+                <h4 data-i18n="title_add_new"></h4>
+                <div class="add-item-container"><input type="text" id="expandedNewProjectInput" data-i18n-placeholder="ph_project_name"><input type="number" id="expandedNewProjectStatusInput" data-i18n-placeholder="ph_status_done" min="0" max="100"><div class="custom-select-container" id="expandedNewProjectImportanceContainer"></div><input type="date" id="expandedNewProjectDueDateInput"><div class="custom-select-container" id="expandedNewProjectGoalContainer"></div><div class="custom-select-container" id="expandedNewProjectSkillsContainer"></div><button id="expandedAddProjectBtn" class="primary-btn" data-i18n="btn_add"></button></div>
+                <p class="feedback-message" id="projectFeedback"></p>
+            </div>
+            <div id="tab-routines" class="tab-content" style="flex-direction: column; gap: 15px;">
+                <div class="expanded-item-list" id="expanded-routines-list"></div>
+                <h4 data-i18n="title_add_new"></h4>
+                <div class="add-item-container"><input type="text" id="expandedNewRoutineInput" data-i18n-placeholder="ph_routine_name"><select id="expandedNewRoutineFrequency"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select><div class="custom-select-container" id="expandedNewRoutineImportanceContainer"></div><div class="custom-select-container" id="expandedNewRoutineGoalContainer"></div><div class="custom-select-container" id="expandedNewRoutineSkillsContainer"></div><button id="expandedAddRoutineBtn" class="primary-btn" data-i18n="btn_add"></button></div>
+                <p class="feedback-message" id="routineFeedback"></p>
+            </div>
+             <div id="tab-skills" class="tab-content" style="flex-direction: column; gap: 15px;">
+                <div class="expanded-item-list" id="expanded-skills-list"></div>
+                <h4 data-i18n="title_add_new"></h4>
+                <div class="add-item-container"><input type="text" id="expandedNewSkillName" placeholder="Skill name..."><select id="expandedNewSkillImportance"><option value="High">High</option><option value="Low">Low</option></select><input type="number" id="expandedNewSkillKnowledge" placeholder="Knowledge %"><input type="number" id="expandedNewSkillXp" placeholder="XP %"><button id="expandedAddSkillBtn" class="primary-btn" data-i18n="btn_add"></button></div>
+                <p class="feedback-message" id="skillFeedback"></p>
+            </div>
+        </div>
+    </div>
+</div>
 
             <div id="lifeSkillsPage" class="page" style="display: none;">
                 <div class="page-header">

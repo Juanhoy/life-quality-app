@@ -88,8 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setupManageRolesPage();
 
     document.getElementById("saveDataBtn").addEventListener("click", saveToLocalStorage);
-    
-    // The "Load Data" button listener is now removed.
 
     document.getElementById("profileBtn").addEventListener("click", openProfileModal);
     document.getElementById("saveProfileBtn").addEventListener("click", saveProfile);
@@ -156,6 +154,7 @@ function showPage(pageId, context = {}) {
         case 'financialsDetailPage': renderFinancialsPage(); break;
         case 'resourceCategoryDetailPage': renderResourceCategoryPage(context); break;
         case 'itemDetailPage': renderItemDetailPage(context); break;
+        case 'expandedRolePage': renderExpandedRolePage(context); break;
     }
 }
 
@@ -516,7 +515,7 @@ function createLibraryItem(type, title, roles, details = '', skills = '', compli
 }
 
 // =================================================================================
-// ==================== LIFE ROLES PAGE & MODAL LOGIC (REFACTORED) =================
+// ==================== LIFE ROLES & EXPANDED PAGE LOGIC ===========================
 // =================================================================================
 
 function setupManageRolesPage() {
@@ -645,7 +644,7 @@ function renderLifeRolesPage() {
     });
 
     for (const dimName in dimensionLibraryData) {
-        if (['appSettings', 'resources', 'financials'].includes(dimName)) continue;
+        if (['appSettings', 'resources', 'financials', 'skills'].includes(dimName)) continue;
         const dim = dimensionLibraryData[dimName];
 
         const processItem = (item, index, category, tab, frequency) => {
@@ -720,6 +719,7 @@ function createRoleCard(role, itemsForRole) {
             <div class="role-header-actions">
                 <i class="fas fa-filter" data-action="filter" data-role-key="${role.key}"></i>
                 <i class="fas fa-sort-amount-down" data-action="sort" data-role-key="${role.key}"></i>
+                <i class="fas fa-expand-arrows-alt" data-action="expand" data-role-key="${role.key}"></i>
             </div>
         </div>
         ${itemsHtml}`;
@@ -741,6 +741,11 @@ function setupRoleCardInteractions(container) {
             e.stopPropagation();
             const action = e.target.dataset.action;
             const roleKey = e.target.dataset.roleKey;
+
+            if (action === 'expand') {
+                showPage('expandedRolePage', { roleKey: roleKey });
+                return;
+            }
 
             let menuItems = [];
             if (action === 'filter') {
@@ -905,7 +910,191 @@ function deleteSkill() {
 
 
 // =================================================================================
-// ==================== END OF LIFE ROLES & SKILLS LOGIC ===========================
+// ==================== EXPANDED ROLE PAGE LOGIC ===================================
+// =================================================================================
+
+function renderExpandedRolePage(context) {
+    const { roleKey } = context;
+    const role = dimensionLibraryData.appSettings.userRoles.find(r => r.key === roleKey);
+    if (!role) {
+        showPage('lifeRolesPage');
+        return;
+    }
+
+    const page = document.getElementById('expandedRolePage');
+
+    // Set page title
+    const titleEl = document.getElementById('expandedRoleTitle');
+    titleEl.innerHTML = `<i class="fas ${role.icon}"></i> ${getTranslation(role.key)}`;
+
+    // Set up back button
+    document.getElementById('backToRolesFromExpandedLink').onclick = (e) => {
+        e.preventDefault();
+        showPage('lifeRolesPage');
+    };
+
+    // --- Setup tabs ---
+    const tabs = page.querySelectorAll('.library-tabs li');
+    const tabContents = page.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            const targetId = 'tab-' + this.dataset.tab;
+            tabContents.forEach(content => {
+                content.style.display = content.id === targetId ? 'flex' : 'none';
+                content.classList.toggle('active', content.id === targetId);
+            });
+        });
+    });
+     // Manually trigger click on the first tab to ensure it's active on render
+    tabs[0].click();
+
+
+    // --- Find and render all items for this role ---
+    const allItems = { goals: [], challenges: [], projects: [], routines: [] };
+    for (const dimName in dimensionLibraryData) {
+        if (['appSettings', 'resources', 'financials', 'skills'].includes(dimName)) continue;
+        const dim = dimensionLibraryData[dimName];
+        ['goals', 'challenges', 'projects'].forEach(cat => {
+            dim[cat]?.forEach((item, index) => {
+                if (item.lifeRoles?.includes(roleKey)) {
+                    allItems[cat].push({ ...item, dimension: dimName, tab: cat, originalIndex: index });
+                }
+            });
+        });
+        if (dim.routines) {
+            Object.entries(dim.routines).forEach(([freq, items]) => {
+                items?.forEach((item, index) => {
+                     if (item.lifeRoles?.includes(roleKey)) {
+                        allItems.routines.push({ ...item, dimension: dimName, tab: 'routines', originalIndex: index, frequency: freq });
+                    }
+                });
+            });
+        }
+    }
+    const allSkills = dimensionLibraryData.skills
+        .map((skill, index) => ({ ...skill, originalIndex: index }))
+        .filter(skill => skill.roleKey === roleKey);
+        
+    // --- Render Lists ---
+    renderExpandedItemList(allItems.goals, page.querySelector('#expanded-goals-list'), 'goal');
+    renderExpandedItemList(allItems.challenges, page.querySelector('#expanded-challenges-list'), 'challenge');
+    renderExpandedItemList(allItems.projects, page.querySelector('#expanded-projects-list'), 'project');
+    renderExpandedItemList(allItems.routines, page.querySelector('#expanded-routines-list'), 'routine');
+    renderExpandedItemList(allSkills, page.querySelector('#expanded-skills-list'), 'skill');
+
+
+    // --- Initialize forms ---
+    initializeAllCustomSelects(); // This will handle all dropdowns on the page
+    
+    // --- Setup form submission handlers ---
+    document.getElementById('expandedAddGoalBtn').onclick = () => handleExpandedFormSubmit('goal', roleKey);
+    document.getElementById('expandedAddChallengeBtn').onclick = () => handleExpandedFormSubmit('challenge', roleKey);
+    document.getElementById('expandedAddProjectBtn').onclick = () => handleExpandedFormSubmit('project', roleKey);
+    document.getElementById('expandedAddRoutineBtn').onclick = () => handleExpandedFormSubmit('routine', roleKey);
+    document.getElementById('expandedAddSkillBtn').onclick = () => handleExpandedFormSubmit('skill', roleKey);
+    
+    applyTranslations(page);
+}
+
+function renderExpandedItemList(items, container, type) {
+    container.innerHTML = '';
+    if (items.length === 0) {
+        container.innerHTML = `<p class="no-items">${getTranslation('no_items_role')}</p>`;
+        return;
+    }
+
+    items.forEach(item => {
+        let card;
+        if (type === 'skill') {
+            card = document.createElement('div');
+            card.className = 'skill-item';
+            card.innerHTML = `<div>${item.name}</div><div class="skill-details"><span>${getTranslation('label_importance')}: ${getTranslation('importance_' + item.importance.toLowerCase())}</span></div>`;
+            card.addEventListener('click', () => openSkillModal({ index: item.originalIndex }));
+        } else {
+            const context = { dimension: item.dimension, tab: item.tab, index: item.originalIndex, frequency: item.frequency, originPage: 'expandedRolePage' };
+            card = createLibraryItem(type, item.name, createRolesHtml(item.lifeRoles), '', createSkillsHtml(item.associatedSkills));
+            card.addEventListener('click', () => showPage('itemDetailPage', context));
+        }
+        container.appendChild(card);
+    });
+}
+
+
+function handleExpandedFormSubmit(type, roleKey) {
+    let newItem = {};
+    let feedbackEl;
+
+    if (type === 'goal') {
+        newItem = {
+            name: document.getElementById('expandedNewGoalInput').value.trim(),
+            status: parseInt(document.getElementById('expandedNewGoalStatusInput').value) || 0,
+            dueDate: document.getElementById('expandedNewGoalDueDateInput').value,
+            importance: getCustomSelectValue('expandedNewGoalImportanceContainer'),
+            lifeRoles: [roleKey]
+        };
+        feedbackEl = document.getElementById('goalFeedback');
+        if (newItem.name) dimensionLibraryData[currentDimension].goals.push(newItem);
+    } else if (type === 'challenge') {
+        newItem = {
+            name: document.getElementById('expandedNewChallengeInput').value.trim(),
+            importance: getCustomSelectValue('expandedNewChallengeImportanceContainer'),
+            lifeRoles: [roleKey]
+        };
+        feedbackEl = document.getElementById('challengeFeedback');
+        if (newItem.name) dimensionLibraryData[currentDimension].challenges.push(newItem);
+    } else if (type === 'project') {
+        newItem = {
+            name: document.getElementById('expandedNewProjectInput').value.trim(),
+            status: parseInt(document.getElementById('expandedNewProjectStatusInput').value) || 0,
+            dueDate: document.getElementById('expandedNewProjectDueDateInput').value,
+            importance: getCustomSelectValue('expandedNewProjectImportanceContainer'),
+            goalAssociation: getCustomSelectValue('expandedNewProjectGoalContainer'),
+            associatedSkills: getCustomSelectValue('expandedNewProjectSkillsContainer'),
+            lifeRoles: [roleKey]
+        };
+        feedbackEl = document.getElementById('projectFeedback');
+        if (newItem.name) dimensionLibraryData[currentDimension].projects.push(newItem);
+    } else if (type === 'routine') {
+        newItem = {
+            name: document.getElementById('expandedNewRoutineInput').value.trim(),
+            frequency: document.getElementById('expandedNewRoutineFrequency').value,
+            importance: getCustomSelectValue('expandedNewRoutineImportanceContainer'),
+            goalAssociation: getCustomSelectValue('expandedNewRoutineGoalContainer'),
+            associatedSkills: getCustomSelectValue('expandedNewRoutineSkillsContainer'),
+            lifeRoles: [roleKey],
+            compliance: false
+        };
+        feedbackEl = document.getElementById('routineFeedback');
+        if (newItem.name) dimensionLibraryData[currentDimension].routines[newItem.frequency].push(newItem);
+    } else if (type === 'skill') {
+        newItem = {
+            name: document.getElementById('expandedNewSkillName').value.trim(),
+            importance: document.getElementById('expandedNewSkillImportance').value,
+            knowledgeLevel: parseInt(document.getElementById('expandedNewSkillKnowledge').value) || 0,
+            xpLevel: parseInt(document.getElementById('expandedNewSkillXp').value) || 0,
+            roleKey: roleKey
+        };
+        feedbackEl = document.getElementById('skillFeedback');
+        if (newItem.name) dimensionLibraryData.skills.push(newItem);
+    }
+
+    if (!newItem.name) {
+        alert("Please enter a name.");
+        return;
+    }
+
+    saveToLocalStorage(false);
+    feedbackEl.textContent = `"${newItem.name}" has been added!`;
+    setTimeout(() => { feedbackEl.textContent = ''; }, 3000);
+
+    // Re-render the page to show the new item in the list and clear forms
+    renderExpandedRolePage({ roleKey });
+}
+
+// =================================================================================
+// ==================== END OF EXPANDED ROLE PAGE LOGIC ============================
 // =================================================================================
 
 
