@@ -250,11 +250,12 @@ function updateChartColors(){
  * *****************************************************************/
 const translations = {
     en: {
-        nav_life_visualization: "Life Visualization", nav_life_balance: "Life Balance", nav_life_roles: "Life Roles", nav_life_resources: "Life Resources", nav_options: "Options",
+        nav_life_visualization: "Life Visualization", nav_life_balance: "Life Balance", nav_life_roles: "Life Roles", nav_life_skills: "Life Skills", nav_life_resources: "Life Resources", nav_options: "Options",
         btn_save_data: "Save Data", btn_load_data: "Load Data", btn_add: "Add", btn_done: "Done", btn_manage_roles: "Manage Roles", btn_upload_image: "Upload Image",
-        btn_save: "Save", btn_delete: "Delete", btn_cancel: "Cancel", btn_add_item: "Add Item",
+        btn_save: "Save", btn_delete: "Delete", btn_cancel: "Cancel", btn_add_item: "Add Item", btn_add_skill: "Add Skill",
         title_life_quality: "Life Quality", title_manage_roles: "Manage Roles", title_available_roles: "Available Roles", title_active_roles: "Your Active Roles",
         title_edit_profile: "Edit Profile", title_edit_resource: "Edit Resource", title_add_new_resource: "Add New Resource", title_edit: "Edit", title_add_new: "Add New",
+        title_life_skills: "Life Skills", title_add_new_skill: "Add New Skill", title_edit_skill: "Edit Skill",
         tab_challenges: "Challenges", tab_goals: "Goals", tab_projects: "Projects", tab_routines: "Routines",
         subtitle_daily: "Daily", subtitle_weekly: "Weekly", subtitle_monthly: "Monthly",
         ph_add_challenge: "Add a new challenge...", ph_goal_name: "Goal name...", ph_status_done: "% done", ph_project_name: "Project name...", ph_routine_name: "Routine name...",
@@ -262,6 +263,7 @@ const translations = {
         label_name: "Name", label_category: "Category", label_description: "Description", label_value: "Value ($)", label_purchase_date: "Purchase Date",
         label_amount: "Amount ($)", label_date: "Date", label_color_theme: "Color Theme", label_language: "Language",
         label_status: "Status", label_importance: "Importance", label_due_date: "Due", label_compliance: "Done Today", yes: "Yes", no: "No",
+        label_skill_name: "Skill Name", label_knowledge_level: "Knowledge Level (%)", label_xp_level: "XP Level (%)",
         health: "Health", family: "Family", freedom: "Freedom", community: "Community", management: "Management", learning: "Learning", creation: "Creation", fun: "Fun",
         money: "Money", total_net_worth: "Total Net Worth", incomes: "Incomes", expenses: "Expenses", savings: "Savings", investments: "Investments", debts: "Debts",
         btn_add_income: "Add Income", btn_add_expense: "Add Expense", btn_add_saving: "Add Saving", btn_add_investment: "Add Investment", btn_add_debt: "Add Debt",
@@ -272,17 +274,18 @@ const translations = {
         partner: "Partner", philosopher: "Philosopher", producer: "Producer", professional: "Professional", scientist: "Scientist", sister: "Sister", son: "Son",
         spiritualist: "Spiritualist", student: "Student", teacher: "Teacher", traveler: "Traveler", visionary: "Visionary", volunteer: "Volunteer",
         warrior: "Warrior", writer: "Writer", multimedia_artist: "Multimedia Artist",
-        no_items_role: "No items for this role.", no_items_category: "No items in this category yet. Click 'Add Item' to start.",
+        no_items_role: "No items for this role.", no_skills_role: "No skills for this role yet.", no_items_category: "No items in this category yet. Click 'Add Item' to start.",
         confirm_delete: "Are you sure you want to delete this item?",
         confirm_delete_role_text: "Are you sure you want to delete the role '{roleName}'? This will remove it from all associated items.",
         confirm_load: "This will overwrite your current data with the version from your last save. Are you sure?",
     },
     es: {
-        nav_life_visualization: "Visualización", nav_life_balance: "Balance de Vida", nav_life_roles: "Roles de Vida", nav_life_resources: "Recursos de Vida", nav_options: "Opciones",
+        nav_life_visualization: "Visualización", nav_life_balance: "Balance de Vida", nav_life_roles: "Roles de Vida", nav_life_skills: "Habilidades de Vida", nav_life_resources: "Recursos de Vida", nav_options: "Opciones",
         btn_save_data: "Guardar Datos", btn_load_data: "Cargar Datos", btn_add: "Añadir", btn_done: "Hecho", btn_manage_roles: "Gestionar Roles", btn_upload_image: "Subir Imagen",
-        btn_save: "Guardar", btn_delete: "Eliminar", btn_cancel: "Cancelar", btn_add_item: "Añadir Objeto",
+        btn_save: "Guardar", btn_delete: "Eliminar", btn_cancel: "Cancelar", btn_add_item: "Añadir Objeto", btn_add_skill: "Añadir Habilidad",
         title_life_quality: "Calidad de Vida", title_manage_roles: "Gestionar Roles", title_available_roles: "Roles Disponibles", title_active_roles: "Tus Roles Activos",
         title_edit_profile: "Editar Perfil", title_edit_resource: "Editar Recurso", title_add_new_resource: "Añadir Nuevo Recurso", title_edit: "Editar", title_add_new: "Añadir Nuevo",
+        title_life_skills: "Habilidades de Vida", title_add_new_skill: "Añadir Nueva Habilidad", title_edit_skill: "Editar Habilidad",
         tab_challenges: "Retos", tab_goals: "Metas", tab_projects: "Proyectos", tab_routines: "Rutinas",
         subtitle_daily: "Diarias", subtitle_weekly: "Semanales", subtitle_monthly: "Mensuales",
         ph_add_challenge: "Añadir un nuevo reto...", ph_goal_name: "Nombre de la meta...", ph_status_done: "% completado", ph_project_name: "Nombre del proyecto...", ph_routine_name: "Nombre de la rutina...",
@@ -290,6 +293,7 @@ const translations = {
         label_name: "Nombre", label_category: "Categoría", label_description: "Descripción", label_value: "Valor ($)", label_purchase_date: "Fecha de Compra",
         label_amount: "Monto ($)", label_date: "Fecha", label_color_theme: "Tema de Color", label_language: "Idioma",
         label_status: "Estado", label_importance: "Importancia", label_due_date: "Vence", label_compliance: "Hecho Hoy", yes: "Sí", no: "No",
+        label_skill_name: "Nombre de Habilidad", label_knowledge_level: "Nivel de Conocimiento (%)", label_xp_level: "Nivel de XP (%)",
         health: "Salud", family: "Familia", freedom: "Libertad", community: "Comunidad", management: "Gestión", learning: "Aprendizaje", creation: "Creación", fun: "Diversión",
         money: "Dinero", total_net_worth: "Patrimonio Neto Total", incomes: "Ingresos", expenses: "Gastos", savings: "Ahorros", investments: "Inversiones", debts: "Deudas",
         btn_add_income: "Añadir Ingreso", btn_add_expense: "Añadir Gasto", btn_add_saving: "Añadir Ahorro", btn_add_investment: "Añadir Inversión", btn_add_debt: "Añadir Deuda",
@@ -300,7 +304,7 @@ const translations = {
         partner: "Pareja", philosopher: "Filósofo", producer: "Productor", professional: "Profesional", scientist: "Científico", sister: "Hermana", son: "Hijo",
         spiritualist: "Espiritual", student: "Estudiante", teacher: "Profesor", traveler: "Viajero", visionary: "Visionario", volunteer: "Voluntario",
         warrior: "Guerrero", writer: "Escritor", multimedia_artist: "Artista Multimedia",
-        no_items_role: "No hay objetos para este rol.", no_items_category: "Aún no hay objetos en esta categoría. Haz clic en 'Añadir Objeto' para empezar.",
+        no_items_role: "No hay objetos para este rol.", no_skills_role: "Aún no hay habilidades para este rol.", no_items_category: "Aún no hay objetos en esta categoría. Haz clic en 'Añadir Objeto' para empezar.",
         confirm_delete: "¿Estás seguro de que quieres eliminar este objeto?",
         confirm_delete_role_text: "¿Estás seguro de que quieres eliminar el rol '{roleName}'? Esto lo eliminará de todos los objetos asociados.",
         confirm_load: "Esto sobreescribirá tus datos actuales con la versión de tu último guardado. ¿Estás seguro?",
@@ -465,14 +469,14 @@ function renderLibrary(dimension, tab) {
 
     const renderItem = (item, index, type, frequency = null) => {
         const rolesHtml = createRolesHtml(item.lifeRoles);
-        const skillsHtml = createSkillsHtml(item.associatedSkills); // New
+        const skillsHtml = createSkillsHtml(item.associatedSkills);
         let detailsHtml = '';
         if (item.status !== undefined) detailsHtml += `<span>${getTranslation('label_status')}: ${item.status}%</span>`;
         if (item.importance) detailsHtml += `<span>${getTranslation('label_importance')}: ${item.importance}</span>`;
         if (item.dueDate) detailsHtml += `<span>${getTranslation('label_due_date')}: ${item.dueDate || "N/A"}</span>`;
         if (item.compliance !== undefined) detailsHtml += `<span>${getTranslation('label_compliance')}: ${item.compliance ? getTranslation('yes') : getTranslation('no')}</span>`;
 
-        const div = createLibraryItem(type, item.name, rolesHtml, `<div class="card-details">${detailsHtml}</div>`, skillsHtml); // Modified
+        const div = createLibraryItem(type, item.name, rolesHtml, `<div class="card-details">${detailsHtml}</div>`, skillsHtml);
 
         const context = { dimension, tab: type + 's', index, frequency, originPage: 'lifeBalancePage' };
         div.addEventListener('click', () => showPage('itemDetailPage', context));
@@ -501,7 +505,7 @@ function renderLibrary(dimension, tab) {
     initializeAllCustomSelects();
 }
 
-function createLibraryItem(type, title, roles, details = '', skills = '') { // Modified
+function createLibraryItem(type, title, roles, details = '', skills = '') {
     const div = document.createElement("div");
     div.className = `library-item ${type}-card`;
     div.innerHTML = `
@@ -809,22 +813,22 @@ function createSkillCard(role, skills) {
                 <li class="skill-item" data-skill-index="${skill.originalIndex}">
                     <div>${skill.name}</div>
                     <div class="skill-details">
-                        <span>Importance: ${skill.importance}</span>
-                        <span>Knowledge: ${skill.knowledgeLevel}%</span>
-                        <span>XP: ${skill.xpLevel}%</span>
+                        <span>${getTranslation('label_importance')}: ${skill.importance}</span>
+                        <span>${getTranslation('label_knowledge_level')}: ${skill.knowledgeLevel}%</span>
+                        <span>${getTranslation('label_xp_level')}: ${skill.xpLevel}%</span>
                     </div>
                 </li>
             `;
         });
     } else {
-        skillsHtml += `<li class="no-items">No skills for this role yet.</li>`;
+        skillsHtml += `<li class="no-items">${getTranslation('no_skills_role')}</li>`;
     }
     skillsHtml += '</ul>';
 
     card.innerHTML = `
         <div class="skill-header">
             <h3><i class="fas ${role.icon}"></i> ${getTranslation(role.key)}</h3>
-            <button class="primary-btn add-skill-btn" data-role-key="${role.key}">Add Skill</button>
+            <button class="primary-btn add-skill-btn" data-role-key="${role.key}" data-i18n="btn_add_skill"></button>
         </div>
         ${skillsHtml}
     `;
@@ -837,11 +841,11 @@ function createSkillCard(role, skills) {
     card.querySelectorAll('.skill-item').forEach(item => {
         item.addEventListener('click', (e) => {
             const skillIndex = parseInt(e.currentTarget.dataset.skillIndex, 10);
-            const skillToEdit = dimensionLibraryData.skills[skillIndex];
-            openSkillModal({ roleKey: skillToEdit.roleKey, index: skillIndex });
+            openSkillModal({ index: skillIndex });
         });
     });
-
+    
+    applyTranslations(card); // Apply translations to the newly created card
     return card;
 }
 
@@ -856,7 +860,8 @@ function openSkillModal(context) {
     if (index !== undefined && index !== null) {
         // Editing existing skill
         const skill = dimensionLibraryData.skills[index];
-        title.textContent = "Edit Skill";
+        editingSkillInfo.roleKey = skill.roleKey; // Ensure roleKey is set for saving
+        title.textContent = getTranslation("title_edit_skill");
         document.getElementById('skillNameInput').value = skill.name;
         document.getElementById('skillImportanceInput').value = skill.importance;
         document.getElementById('skillKnowledgeInput').value = skill.knowledgeLevel;
@@ -864,7 +869,7 @@ function openSkillModal(context) {
         deleteBtn.style.display = 'inline-block';
     } else {
         // Adding new skill
-        title.textContent = "Add New Skill";
+        title.textContent = getTranslation("title_add_new_skill");
         document.getElementById('skillNameInput').value = '';
         document.getElementById('skillImportanceInput').value = 'High';
         document.getElementById('skillKnowledgeInput').value = '';
