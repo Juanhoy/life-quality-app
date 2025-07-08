@@ -10,6 +10,7 @@ let roleCardState = {};
 let editingResourceId = null;
 let currentPageOrigin = 'lifeBalancePage';
 let editingFinancialInfo = { type: null, id: null };
+let editingSkillInfo = { roleKey: null, index: null }; 
 
 // Editing variables for library items
 let editingItem = {
@@ -60,6 +61,7 @@ const defaultAppData = {
     Learning: { challenges: [], goals: [], projects: [], routines: { daily: [], weekly: [], monthly: [] }},
     Creation: { challenges: [], goals: [], projects: [], routines: { daily: [], weekly: [], monthly: [] }},
     Fun: { challenges: [], goals: [], projects: [], routines: { daily: [], weekly: [], monthly: [] }},
+    skills: [],
     resources: [],
     financials: { incomes: [], expenses: [], savings: [], investments: [], debts: [] }
 };
@@ -107,6 +109,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("cancelFinancialItemBtn").addEventListener("click", closeFinancialItemModal);
 
     document.getElementById('saveItemDetailBtn').addEventListener('click', saveItemDetail);
+
+    // Event Listeners for the Skill Modal
+    document.getElementById('saveSkillBtn').addEventListener('click', saveSkill);
+    document.getElementById('cancelSkillBtn').addEventListener('click', closeSkillModal);
+    document.getElementById('deleteSkillBtn').addEventListener('click', deleteSkill);
 
     document.body.addEventListener('click', handleGlobalClick);
 });
@@ -160,6 +167,9 @@ function showPage(pageId, context = {}) {
     switch (pageId) {
         case 'lifeRolesPage':
             renderLifeRolesPage();
+            break;
+        case 'lifeSkillsPage':
+            renderLifeSkillsPage();
             break;
         case 'lifeResourcesPage':
             renderLifeResourcesPage();
@@ -455,13 +465,14 @@ function renderLibrary(dimension, tab) {
 
     const renderItem = (item, index, type, frequency = null) => {
         const rolesHtml = createRolesHtml(item.lifeRoles);
+        const skillsHtml = createSkillsHtml(item.associatedSkills); // New
         let detailsHtml = '';
         if (item.status !== undefined) detailsHtml += `<span>${getTranslation('label_status')}: ${item.status}%</span>`;
         if (item.importance) detailsHtml += `<span>${getTranslation('label_importance')}: ${item.importance}</span>`;
         if (item.dueDate) detailsHtml += `<span>${getTranslation('label_due_date')}: ${item.dueDate || "N/A"}</span>`;
         if (item.compliance !== undefined) detailsHtml += `<span>${getTranslation('label_compliance')}: ${item.compliance ? getTranslation('yes') : getTranslation('no')}</span>`;
 
-        const div = createLibraryItem(type, item.name, rolesHtml, `<div class="card-details">${detailsHtml}</div>`);
+        const div = createLibraryItem(type, item.name, rolesHtml, `<div class="card-details">${detailsHtml}</div>`, skillsHtml); // Modified
 
         const context = { dimension, tab: type + 's', index, frequency, originPage: 'lifeBalancePage' };
         div.addEventListener('click', () => showPage('itemDetailPage', context));
@@ -490,13 +501,14 @@ function renderLibrary(dimension, tab) {
     initializeAllCustomSelects();
 }
 
-function createLibraryItem(type, title, roles, details = '') {
+function createLibraryItem(type, title, roles, details = '', skills = '') { // Modified
     const div = document.createElement("div");
     div.className = `library-item ${type}-card`;
     div.innerHTML = `
         <div class="card-title">${title}</div>
         ${details}
         ${roles}
+        ${skills} 
         <i class="fas fa-ellipsis-h menu-icon"></i>`;
     return div;
 }
@@ -764,7 +776,152 @@ function setupRoleCardInteractions(container) {
     });
 }
 // =================================================================================
-// ==================== END OF LIFE ROLES LOGIC ====================================
+// ========================= LIFE SKILLS PAGE LOGIC ================================
+// =================================================================================
+
+function renderLifeSkillsPage() {
+    const contentDiv = document.getElementById("lifeSkillsContent");
+    if (!contentDiv) return;
+
+    contentDiv.innerHTML = '';
+    const { userRoles } = dimensionLibraryData.appSettings;
+
+    if (!dimensionLibraryData.skills) {
+        dimensionLibraryData.skills = [];
+    }
+
+    userRoles.forEach(role => {
+        const skillsForRole = dimensionLibraryData.skills.map((skill, index) => ({...skill, originalIndex: index}))
+                                                       .filter(skill => skill.roleKey === role.key);
+        const roleCard = createSkillCard(role, skillsForRole);
+        contentDiv.appendChild(roleCard);
+    });
+}
+
+function createSkillCard(role, skills) {
+    const card = document.createElement('div');
+    card.className = 'skill-card';
+
+    let skillsHtml = '<ul class="skill-list">';
+    if (skills.length > 0) {
+        skills.forEach(skill => {
+            skillsHtml += `
+                <li class="skill-item" data-skill-index="${skill.originalIndex}">
+                    <div>${skill.name}</div>
+                    <div class="skill-details">
+                        <span>Importance: ${skill.importance}</span>
+                        <span>Knowledge: ${skill.knowledgeLevel}%</span>
+                        <span>XP: ${skill.xpLevel}%</span>
+                    </div>
+                </li>
+            `;
+        });
+    } else {
+        skillsHtml += `<li class="no-items">No skills for this role yet.</li>`;
+    }
+    skillsHtml += '</ul>';
+
+    card.innerHTML = `
+        <div class="skill-header">
+            <h3><i class="fas ${role.icon}"></i> ${getTranslation(role.key)}</h3>
+            <button class="primary-btn add-skill-btn" data-role-key="${role.key}">Add Skill</button>
+        </div>
+        ${skillsHtml}
+    `;
+
+    card.querySelector('.add-skill-btn').addEventListener('click', (e) => {
+        const roleKey = e.currentTarget.dataset.roleKey;
+        openSkillModal({ roleKey: roleKey });
+    });
+
+    card.querySelectorAll('.skill-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            const skillIndex = parseInt(e.currentTarget.dataset.skillIndex, 10);
+            const skillToEdit = dimensionLibraryData.skills[skillIndex];
+            openSkillModal({ roleKey: skillToEdit.roleKey, index: skillIndex });
+        });
+    });
+
+    return card;
+}
+
+function openSkillModal(context) {
+    const { roleKey, index } = context;
+    editingSkillInfo = { roleKey, index };
+
+    const modal = document.getElementById('skillModal');
+    const title = document.getElementById('skillModalTitle');
+    const deleteBtn = document.getElementById('deleteSkillBtn');
+
+    if (index !== undefined && index !== null) {
+        // Editing existing skill
+        const skill = dimensionLibraryData.skills[index];
+        title.textContent = "Edit Skill";
+        document.getElementById('skillNameInput').value = skill.name;
+        document.getElementById('skillImportanceInput').value = skill.importance;
+        document.getElementById('skillKnowledgeInput').value = skill.knowledgeLevel;
+        document.getElementById('skillXpInput').value = skill.xpLevel;
+        deleteBtn.style.display = 'inline-block';
+    } else {
+        // Adding new skill
+        title.textContent = "Add New Skill";
+        document.getElementById('skillNameInput').value = '';
+        document.getElementById('skillImportanceInput').value = 'High';
+        document.getElementById('skillKnowledgeInput').value = '';
+        document.getElementById('skillXpInput').value = '';
+        deleteBtn.style.display = 'none';
+    }
+
+    modal.style.display = 'flex';
+}
+
+function closeSkillModal() {
+    document.getElementById('skillModal').style.display = 'none';
+}
+
+function saveSkill() {
+    const { roleKey, index } = editingSkillInfo;
+    const skillData = {
+        roleKey: roleKey,
+        name: document.getElementById('skillNameInput').value,
+        importance: document.getElementById('skillImportanceInput').value,
+        knowledgeLevel: parseInt(document.getElementById('skillKnowledgeInput').value) || 0,
+        xpLevel: parseInt(document.getElementById('skillXpInput').value) || 0
+    };
+
+    if (!skillData.name) {
+        alert('Please enter a name for the skill.');
+        return;
+    }
+
+    if (index !== undefined && index !== null) {
+        // Update existing skill
+        dimensionLibraryData.skills[index] = skillData;
+    } else {
+        // Add new skill
+        dimensionLibraryData.skills.push(skillData);
+    }
+
+    saveToLocalStorage();
+    renderLifeSkillsPage();
+    closeSkillModal();
+}
+
+function deleteSkill() {
+    const { index } = editingSkillInfo;
+    if (index !== undefined && index !== null) {
+        if (confirm(getTranslation('confirm_delete'))) {
+            dimensionLibraryData.skills.splice(index, 1);
+            saveToLocalStorage();
+            renderLifeSkillsPage();
+            closeSkillModal();
+        }
+    }
+}
+
+
+// =================================================================================
+// ==================== END OF LIFE ROLES & SKILLS LOGIC ===========================
 // =================================================================================
 
 
@@ -931,7 +1088,7 @@ function showContextMenu(target, menuItems) {
     menu.style.left = `${rect.left + window.scrollX - menu.offsetWidth + rect.width}px`;
 }
 
-function createCustomSelect(container, options, config = {}) { if (!container || typeof container.innerHTML === 'undefined') { console.error("Invalid container provided to createCustomSelect", container); return; } const { placeholder = 'Select...', initialValue = null, isMultiSelect = false } = config; const type = isMultiSelect ? 'checkbox' : 'radio'; const name = container.id; container.innerHTML = ` <button type="button" class="custom-select-button" aria-haspopup="listbox"> <span class="button-text">${placeholder}</span> <i class="fas fa-chevron-down"></i> </button> <div class="custom-select-dropdown" role="listbox"> ${options.map(opt => ` <label> <input type="${type}" name="${name}" value="${opt.value}"> <span class="custom-radio"></span> <span class="role-name">${opt.text}</span> </label> `).join('')} </div>`; const button = container.querySelector('.custom-select-button'); const dropdown = container.querySelector('.custom-select-dropdown'); const allOptions = container.querySelectorAll(`input`); const updateButtonText = () => { const selected = Array.from(allOptions).filter(o => o.checked); const buttonText = container.querySelector('.button-text'); if (selected.length === 0) { buttonText.textContent = placeholder; } else if (isMultiSelect) { if (selected.length === 1) buttonText.textContent = selected[0].parentElement.querySelector('.role-name').textContent; else buttonText.textContent = `${selected.length} Roles Selected`; } else { buttonText.textContent = selected[0].parentElement.querySelector('.role-name').textContent; } }; allOptions.forEach(opt => { if (isMultiSelect) { if (Array.isArray(initialValue) && initialValue.includes(opt.value)) opt.checked = true; } else { if (opt.value === String(initialValue)) opt.checked = true; } opt.addEventListener('change', () => { updateButtonText(); if (!isMultiSelect) dropdown.classList.remove('visible'); }); }); button.addEventListener('click', (e) => { e.stopPropagation(); const isVisible = dropdown.classList.contains('visible'); document.querySelectorAll('.custom-select-dropdown.visible').forEach(d => d.classList.remove('visible')); if (!isVisible) dropdown.classList.add('visible'); }); updateButtonText(); }
+function createCustomSelect(container, options, config = {}) { if (!container || typeof container.innerHTML === 'undefined') { console.error("Invalid container provided to createCustomSelect", container); return; } const { placeholder = 'Select...', initialValue = null, isMultiSelect = false } = config; const type = isMultiSelect ? 'checkbox' : 'radio'; const name = container.id; container.innerHTML = ` <button type="button" class="custom-select-button" aria-haspopup="listbox"> <span class="button-text">${placeholder}</span> <i class="fas fa-chevron-down"></i> </button> <div class="custom-select-dropdown" role="listbox"> ${options.map(opt => ` <label> <input type="${type}" name="${name}" value="${opt.value}"> <span class="custom-radio"></span> <span class="role-name">${opt.text}</span> </label> `).join('')} </div>`; const button = container.querySelector('.custom-select-button'); const dropdown = container.querySelector('.custom-select-dropdown'); const allOptions = container.querySelectorAll(`input`); const updateButtonText = () => { const selected = Array.from(allOptions).filter(o => o.checked); const buttonText = container.querySelector('.button-text'); if (selected.length === 0) { buttonText.textContent = placeholder; } else if (isMultiSelect) { if (selected.length === 1) buttonText.textContent = selected[0].parentElement.querySelector('.role-name').textContent; else buttonText.textContent = `${selected.length} Selected`; } else { buttonText.textContent = selected[0].parentElement.querySelector('.role-name').textContent; } }; allOptions.forEach(opt => { if (isMultiSelect) { if (Array.isArray(initialValue) && initialValue.includes(opt.value)) opt.checked = true; } else { if (opt.value === String(initialValue)) opt.checked = true; } opt.addEventListener('change', () => { updateButtonText(); if (!isMultiSelect) dropdown.classList.remove('visible'); }); }); button.addEventListener('click', (e) => { e.stopPropagation(); const isVisible = dropdown.classList.contains('visible'); document.querySelectorAll('.custom-select-dropdown.visible').forEach(d => d.classList.remove('visible')); if (!isVisible) dropdown.classList.add('visible'); }); updateButtonText(); }
 function getCustomSelectValue(containerId) { const container = document.getElementById(containerId); if (!container) return null; const isMultiSelect = !!container.querySelector('input[type="checkbox"]'); if (isMultiSelect) { return Array.from(container.querySelectorAll('input:checked')).map(cb => cb.value); } const singleSelected = container.querySelector('input:checked'); return singleSelected ? singleSelected.value : null; }
 
 /*****************************************************************
@@ -957,12 +1114,29 @@ function initializeAllCustomSelects() {
     document.querySelectorAll('[id*="GoalContainer"]').forEach(container => {
         createCustomSelect(container, goalOptions, { placeholder: 'Select Goal', initialValue: '' });
     });
+
+    const skillOptions = (dimensionLibraryData.skills || []).map((skill, index) => ({
+        value: index.toString(),
+        text: skill.name
+    }));
+    document.querySelectorAll('[id*="SkillsContainer"]').forEach(container => {
+        createCustomSelect(container, skillOptions, { placeholder: 'Associated Skills', isMultiSelect: true });
+    });
 }
 function buildDimensionInputs() { dimensions.forEach(dim => { const container = document.createElement("div"); container.className = "dimension-input"; container.dataset.dimension = dim.name; container.innerHTML = `<span class="dimension-name">${dim.name}</span><input class="dimension-score" type="number" value="0" min="0" max="100" data-name="${dim.name}" placeholder="0%">`; inputsDiv.appendChild(container); inputs[dim.name] = container.querySelector('input'); inputs[dim.name].addEventListener("input", updateLifeQuality); }); }
 
 function createRolesHtml(rolesArray) {
     if (!rolesArray || rolesArray.length === 0) return '';
     return `<div class="card-roles">${rolesArray.map(roleKey => `<span class="life-role-tag">${getTranslation(roleKey)}</span>`).join(' ')}</div>`;
+}
+
+function createSkillsHtml(skillIndexArray) {
+    if (!skillIndexArray || skillIndexArray.length === 0) return '';
+    const allSkills = dimensionLibraryData.skills || [];
+    return `<div class="card-skills">${skillIndexArray.map(skillIndex => {
+        const skill = allSkills[skillIndex];
+        return skill ? `<span class="skill-tag">${skill.name}</span>` : '';
+    }).join(' ')}</div>`;
 }
 
 /*****************************************************************
@@ -972,10 +1146,10 @@ function setupAddButtons() {
     const addConfigs = {
         "addChallengeBtn":    { type: 'challenge', inputs: { name: 'newChallengeInput' }, selects: { lifeRoles: 'newChallengeRolesContainer', importance: 'newChallengeImportanceContainer' } },
         "addGoalBtn":         { type: 'goal', inputs: { name: 'newGoalInput', status: 'newGoalStatusInput', dueDate: 'newGoalDueDateInput' }, selects: { lifeRoles: 'newGoalRolesContainer', importance: 'newGoalImportanceContainer' } },
-        "addProjectBtn":      { type: 'project', inputs: { name: 'newProjectInput', status: 'newProjectStatusInput', dueDate: 'newProjectDueDateInput' }, selects: { importance: 'newProjectImportanceContainer', goalAssociation: 'newProjectGoalContainer', lifeRoles: 'newProjectRolesContainer' } },
-        "addDailyRoutineBtn":   { type: 'routine', frequency: 'daily', inputs: { name: 'newDailyRoutineInput' }, selects: { goalAssociation: 'newDailyRoutineGoalContainer', lifeRoles: 'newDailyRoutineRolesContainer', importance: 'newDailyRoutineImportanceContainer' }, defaults: { compliance: false } },
-        "addWeeklyRoutineBtn":  { type: 'routine', frequency: 'weekly', inputs: { name: 'newWeeklyRoutineInput' }, selects: { goalAssociation: 'newWeeklyRoutineGoalContainer', lifeRoles: 'newWeeklyRoutineRolesContainer', importance: 'newWeeklyRoutineImportanceContainer' }, defaults: { compliance: false } },
-        "addMonthlyRoutineBtn": { type: 'routine', frequency: 'monthly', inputs: { name: 'newMonthlyRoutineInput' }, selects: { goalAssociation: 'newMonthlyRoutineGoalContainer', lifeRoles: 'newMonthlyRoutineRolesContainer', importance: 'newMonthlyRoutineImportanceContainer' }, defaults: { compliance: false } },
+        "addProjectBtn":      { type: 'project', inputs: { name: 'newProjectInput', status: 'newProjectStatusInput', dueDate: 'newProjectDueDateInput' }, selects: { importance: 'newProjectImportanceContainer', goalAssociation: 'newProjectGoalContainer', lifeRoles: 'newProjectRolesContainer', associatedSkills: 'newProjectSkillsContainer' } },
+        "addDailyRoutineBtn":   { type: 'routine', frequency: 'daily', inputs: { name: 'newDailyRoutineInput' }, selects: { goalAssociation: 'newDailyRoutineGoalContainer', lifeRoles: 'newDailyRoutineRolesContainer', importance: 'newDailyRoutineImportanceContainer', associatedSkills: 'newDailyRoutineSkillsContainer' }, defaults: { compliance: false } },
+        "addWeeklyRoutineBtn":  { type: 'routine', frequency: 'weekly', inputs: { name: 'newWeeklyRoutineInput' }, selects: { goalAssociation: 'newWeeklyRoutineGoalContainer', lifeRoles: 'newWeeklyRoutineRolesContainer', importance: 'newWeeklyRoutineImportanceContainer', associatedSkills: 'newWeeklyRoutineSkillsContainer' }, defaults: { compliance: false } },
+        "addMonthlyRoutineBtn": { type: 'routine', frequency: 'monthly', inputs: { name: 'newMonthlyRoutineInput' }, selects: { goalAssociation: 'newMonthlyRoutineGoalContainer', lifeRoles: 'newMonthlyRoutineRolesContainer', importance: 'newMonthlyRoutineImportanceContainer', associatedSkills: 'newMonthlyRoutineSkillsContainer' }, defaults: { compliance: false } },
     };
     for(const btnId in addConfigs) { document.getElementById(btnId)?.addEventListener("click", () => createItem(addConfigs[btnId])); }
 }
@@ -1018,6 +1192,9 @@ function renderItemDetailPage(context) {
     if (item.lifeRoles !== undefined) {
         formHtml += `<label><span>Life Roles</span><div class="custom-select-container" id="detailLifeRolesContainer"></div></label>`;
     }
+    if (item.associatedSkills !== undefined) {
+        formHtml += `<label><span>Associated Skills</span><div class="custom-select-container" id="detailSkillsContainer"></div></label>`;
+    }
     if (item.compliance !== undefined) {
         formHtml += `<label><span>${getTranslation('label_compliance')}</span><div class="custom-select-container" id="detailComplianceContainer"></div></label>`;
     }
@@ -1038,6 +1215,10 @@ function renderItemDetailPage(context) {
     if (item.lifeRoles !== undefined) {
         const roleOptions = dimensionLibraryData.appSettings.userRoles.map(r => ({ value: r.key, text: getTranslation(r.key) }));
         createCustomSelect(document.getElementById('detailLifeRolesContainer'), roleOptions, { placeholder: 'Life Roles', isMultiSelect: true, initialValue: item.lifeRoles });
+    }
+    if (item.associatedSkills !== undefined) {
+        const skillOptions = (dimensionLibraryData.skills || []).map((skill, index) => ({ value: index.toString(), text: skill.name }));
+        createCustomSelect(document.getElementById('detailSkillsContainer'), skillOptions, { placeholder: 'Associated Skills', isMultiSelect: true, initialValue: item.associatedSkills });
     }
     if (item.compliance !== undefined) {
         const complianceOptions = [ { value: 'true', text: getTranslation('yes') }, { value: 'false', text: getTranslation('no') } ];
@@ -1073,6 +1254,9 @@ function saveItemDetail() {
     }
     if (item.lifeRoles !== undefined) {
         item.lifeRoles = getCustomSelectValue('detailLifeRolesContainer');
+    }
+    if (item.associatedSkills !== undefined) {
+        item.associatedSkills = getCustomSelectValue('detailSkillsContainer');
     }
     if (item.compliance !== undefined) {
         item.compliance = getCustomSelectValue('detailComplianceContainer') === 'true';
@@ -1393,6 +1577,7 @@ function loadFromLocalStorage() {
 
     const loadedLibrary = parsed.libraryData || {};
     if (!loadedLibrary.resources) loadedLibrary.resources = [];
+    if (!loadedLibrary.skills) loadedLibrary.skills = [];
     if (!loadedLibrary.financials) {
         loadedLibrary.financials = { incomes: [], expenses: [], savings: [], investments: [], debts: [] };
     }

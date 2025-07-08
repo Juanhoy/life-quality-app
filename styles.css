@@ -745,3 +745,81 @@ input:checked + .slider:before { transform: translateX(26px); }
 .resize-handle.top-right { top: -9px; right: -9px; cursor: nesw-resize; }
 .resize-handle.bottom-left { bottom: -9px; left: -9px; cursor: nesw-resize; }
 .resize-handle.bottom-right { bottom: -9px; right: -9px; cursor: nwse-resize; }
+
+/* ---------------------------- */
+/* LIFE SKILLS PAGE             */
+/* ---------------------------- */
+.skill-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.skill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.skill-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.skill-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.skill-item {
+    background: var(--bg-tertiary);
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.skill-details {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Add cursor and transition to skill items */
+.skill-item {
+    background: var(--bg-tertiary);
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    cursor: pointer; /* Indicates the item is clickable */
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+/* Add a hover effect similar to other library items */
+.skill-item:hover {
+    transform: translateY(-2px);
+    background-color: var(--border-color);
+}
+
+/* Style for skill tags on project/routine cards */
+.card-skills {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.skill-tag {
+    background-color: var(--accent-secondary); /* A different color to distinguish from roles */
+    color: #ffffff;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    border-radius: 10px;
+    font-weight: 500;
+}
