@@ -10,7 +10,6 @@ let roleCardState = {};
 let editingResourceId = null;
 let currentPageOrigin = 'lifeBalancePage';
 let editingFinancialInfo = { type: null, id: null };
-let currentSkillRoleKey = null; // To track which role we're adding a skill to
 
 // Editing variables for library items
 let editingItem = {
@@ -32,7 +31,6 @@ const defaultAppData = {
     appSettings: {
         userName: "Your Name",
         userImage: "https://i.ibb.co/6n2wz7C/image-50bec5.png",
-        accentInteractive: "#00aaff", // The NEW color property
         userRoles: [
             { key: "son", name: "Son", icon: "fa-child" }, { key: "citizen", name: "Citizen", icon: "fa-flag" },
             { key: "professional", name: "Professional", icon: "fa-user-tie" }, { key: "human", name: "Human", icon: "fa-person" }
@@ -63,8 +61,7 @@ const defaultAppData = {
     Creation: { challenges: [], goals: [], projects: [], routines: { daily: [], weekly: [], monthly: [] }},
     Fun: { challenges: [], goals: [], projects: [], routines: { daily: [], weekly: [], monthly: [] }},
     resources: [],
-    financials: { incomes: [], expenses: [], savings: [], investments: [], debts: [] },
-    skillsByRole: {}
+    financials: { incomes: [], expenses: [], savings: [], investments: [], debts: [] }
 };
 
 const dimensions = [
@@ -82,16 +79,11 @@ document.addEventListener("DOMContentLoaded", () => {
     setupLeftNav();
     setupTabSwitching();
     setupAddButtons();
-    setupVisualizationPage();
+    setupVisualizationPage(); // <-- Called BEFORE loading
     loadFromLocalStorage();
     setupTopNav();
     setupOptions(); 
     setupManageRolesPage();
-    setupProfileModalButtons();
-
-    // Listeners for the Skill Modal
-    document.getElementById('saveSkillBtn').addEventListener('click', saveSkillFromModal);
-    document.getElementById('cancelSkillBtn').addEventListener('click', closeSkillModal);
 
     document.getElementById("saveDataBtn").addEventListener("click", saveToLocalStorage);
     document.getElementById("loadDataBtn").addEventListener("click", () => {
@@ -124,7 +116,6 @@ function initializeDashboard() {
     showDimensionInputs(currentDimension);
     renderLibrary(currentDimension, currentTab);
     updateUserProfileDisplay();
-    applyAccentColor();
     setLanguage(localStorage.getItem('appLanguage') || 'en');
 }
 
@@ -156,28 +147,19 @@ function handleGlobalClick(event) {
 }
 
 /**
- * The single source of truth for page navigation.
+ * REFACTORED: The single source of truth for page navigation.
  * @param {string} pageId The ID of the page to show.
  * @param {object} context An optional object with data for the page.
  */
 function showPage(pageId, context = {}) {
     document.querySelectorAll(".page").forEach(page => page.style.display = "none");
     const targetPage = document.getElementById(pageId);
-    if(targetPage) {
-        if (pageId === 'mainView') {
-            targetPage.style.display = "flex";
-        } else {
-            targetPage.style.display = "block";
-        }
-    }
+    if(targetPage) targetPage.style.display = "block";
 
     // Call the correct render function based on the page ID
     switch (pageId) {
         case 'lifeRolesPage':
             renderLifeRolesPage();
-            break;
-        case 'lifeSkillsPage':
-            renderLifeSkillsPage();
             break;
         case 'lifeResourcesPage':
             renderLifeResourcesPage();
@@ -209,7 +191,6 @@ function setupOptions() {
     const closeOptionsBtn = document.getElementById('closeOptionsBtn');
     const themeToggle = document.getElementById('themeToggle');
     const languageSelector = document.getElementById('languageSelector');
-    const accentColorPicker = document.getElementById('accentColorPicker');
 
     optionsBtn.addEventListener('click', () => optionsModal.style.display = 'flex');
     closeOptionsBtn.addEventListener('click', () => optionsModal.style.display = 'none');
@@ -226,12 +207,6 @@ function setupOptions() {
         setLanguage(e.target.value);
     });
 
-    accentColorPicker.addEventListener('input', (e) => {
-        const newColor = e.target.value;
-        dimensionLibraryData.appSettings.accentInteractive = newColor;
-        applyAccentColor();
-    });
-
     const savedTheme = localStorage.getItem('appTheme') || 'dark';
     const savedLang = localStorage.getItem('appLanguage') || 'en';
 
@@ -245,12 +220,6 @@ function setTheme(theme) {
     document.body.setAttribute('data-theme', theme);
     localStorage.setItem('appTheme', theme);
     updateChartColors();
-}
-
-function applyAccentColor() {
-    const color = dimensionLibraryData?.appSettings?.accentInteractive || '#00aaff';
-    document.documentElement.style.setProperty('--accent-interactive', color);
-    document.getElementById('accentColorPicker').value = color;
 }
 
 function updateChartColors(){
@@ -271,20 +240,17 @@ function updateChartColors(){
  * *****************************************************************/
 const translations = {
     en: {
-        nav_life_visualization: "Life Visualization", nav_life_balance: "Life Balance", nav_life_roles: "Life Roles", nav_life_skills: "Life Skills", nav_life_resources: "Life Resources", nav_options: "Options",
-        btn_save_data: "Save", btn_load_data: "Load Data", btn_add: "Add", btn_done: "Done", btn_manage_roles: "Manage Roles", btn_upload_image: "Upload Image",
-        btn_save: "Save", btn_delete: "Delete", btn_cancel: "Cancel", btn_add_item: "Add Item", btn_donate: "Donate",
-        btn_delete_profile: "Delete Profile", btn_create_profile: "New Profile",
+        nav_life_visualization: "Life Visualization", nav_life_balance: "Life Balance", nav_life_roles: "Life Roles", nav_life_resources: "Life Resources", nav_options: "Options",
+        btn_save_data: "Save Data", btn_load_data: "Load Data", btn_add: "Add", btn_done: "Done", btn_manage_roles: "Manage Roles", btn_upload_image: "Upload Image",
+        btn_save: "Save", btn_delete: "Delete", btn_cancel: "Cancel", btn_add_item: "Add Item",
         title_life_quality: "Life Quality", title_manage_roles: "Manage Roles", title_available_roles: "Available Roles", title_active_roles: "Your Active Roles",
         title_edit_profile: "Edit Profile", title_edit_resource: "Edit Resource", title_add_new_resource: "Add New Resource", title_edit: "Edit", title_add_new: "Add New",
-        title_add_skill: "Add New Skill",
         tab_challenges: "Challenges", tab_goals: "Goals", tab_projects: "Projects", tab_routines: "Routines",
         subtitle_daily: "Daily", subtitle_weekly: "Weekly", subtitle_monthly: "Monthly",
         ph_add_challenge: "Add a new challenge...", ph_goal_name: "Goal name...", ph_status_done: "% done", ph_project_name: "Project name...", ph_routine_name: "Routine name...",
         ph_search_roles: "Search roles...", ph_create_custom_role: "Create custom role...",
-        ph_skill_name: "Skill Name...", ph_skill_method: "Learning Method...", ph_skill_domination: "% Domination",
         label_name: "Name", label_category: "Category", label_description: "Description", label_value: "Value ($)", label_purchase_date: "Purchase Date",
-        label_amount: "Amount ($)", label_date: "Date", label_color_theme: "Color Theme", label_language: "Language", label_accent_color: "Accent Color",
+        label_amount: "Amount ($)", label_date: "Date", label_color_theme: "Color Theme", label_language: "Language",
         label_status: "Status", label_importance: "Importance", label_due_date: "Due", label_compliance: "Done Today", yes: "Yes", no: "No",
         health: "Health", family: "Family", freedom: "Freedom", community: "Community", management: "Management", learning: "Learning", creation: "Creation", fun: "Fun",
         money: "Money", total_net_worth: "Total Net Worth", incomes: "Incomes", expenses: "Expenses", savings: "Savings", investments: "Investments", debts: "Debts",
@@ -297,29 +263,22 @@ const translations = {
         spiritualist: "Spiritualist", student: "Student", teacher: "Teacher", traveler: "Traveler", visionary: "Visionary", volunteer: "Volunteer",
         warrior: "Warrior", writer: "Writer", multimedia_artist: "Multimedia Artist",
         no_items_role: "No items for this role.", no_items_category: "No items in this category yet. Click 'Add Item' to start.",
-        no_skills_role: "No skills defined for this role yet.",
         confirm_delete: "Are you sure you want to delete this item?",
-        confirm_delete_skill: "Are you sure you want to delete this skill?",
         confirm_delete_role_text: "Are you sure you want to delete the role '{roleName}'? This will remove it from all associated items.",
         confirm_load: "This will overwrite your current data with the version from your last save. Are you sure?",
-        confirm_delete_profile: "DANGER: This will permanently delete all your data from this browser. This action cannot be undone. Are you absolutely sure?",
-        confirm_create_profile: "Are you sure you want to create a new profile? All unsaved data for the current profile will be lost.",
     },
     es: {
-        nav_life_visualization: "Visualización", nav_life_balance: "Balance de Vida", nav_life_roles: "Roles de Vida", nav_life_skills: "Habilidades", nav_life_resources: "Recursos de Vida", nav_options: "Opciones",
+        nav_life_visualization: "Visualización", nav_life_balance: "Balance de Vida", nav_life_roles: "Roles de Vida", nav_life_resources: "Recursos de Vida", nav_options: "Opciones",
         btn_save_data: "Guardar Datos", btn_load_data: "Cargar Datos", btn_add: "Añadir", btn_done: "Hecho", btn_manage_roles: "Gestionar Roles", btn_upload_image: "Subir Imagen",
-        btn_save: "Guardar", btn_delete: "Eliminar", btn_cancel: "Cancelar", btn_add_item: "Añadir Objeto", btn_donate: "Donar",
-        btn_delete_profile: "Eliminar Perfil", btn_create_profile: "Nuevo Perfil",
+        btn_save: "Guardar", btn_delete: "Eliminar", btn_cancel: "Cancelar", btn_add_item: "Añadir Objeto",
         title_life_quality: "Calidad de Vida", title_manage_roles: "Gestionar Roles", title_available_roles: "Roles Disponibles", title_active_roles: "Tus Roles Activos",
         title_edit_profile: "Editar Perfil", title_edit_resource: "Editar Recurso", title_add_new_resource: "Añadir Nuevo Recurso", title_edit: "Editar", title_add_new: "Añadir Nuevo",
-        title_add_skill: "Añadir Nueva Habilidad",
         tab_challenges: "Retos", tab_goals: "Metas", tab_projects: "Proyectos", tab_routines: "Rutinas",
         subtitle_daily: "Diarias", subtitle_weekly: "Semanales", subtitle_monthly: "Mensuales",
         ph_add_challenge: "Añadir un nuevo reto...", ph_goal_name: "Nombre de la meta...", ph_status_done: "% completado", ph_project_name: "Nombre del proyecto...", ph_routine_name: "Nombre de la rutina...",
         ph_search_roles: "Buscar roles...", ph_create_custom_role: "Crear rol personalizado...",
-        ph_skill_name: "Nombre de la Habilidad...", ph_skill_method: "Método de Aprendizaje...", ph_skill_domination: "% de Dominio",
         label_name: "Nombre", label_category: "Categoría", label_description: "Descripción", label_value: "Valor ($)", label_purchase_date: "Fecha de Compra",
-        label_amount: "Monto ($)", label_date: "Fecha", label_color_theme: "Tema de Color", label_language: "Idioma", label_accent_color: "Color de Acento",
+        label_amount: "Monto ($)", label_date: "Fecha", label_color_theme: "Tema de Color", label_language: "Idioma",
         label_status: "Estado", label_importance: "Importancia", label_due_date: "Vence", label_compliance: "Hecho Hoy", yes: "Sí", no: "No",
         health: "Salud", family: "Familia", freedom: "Libertad", community: "Comunidad", management: "Gestión", learning: "Aprendizaje", creation: "Creación", fun: "Diversión",
         money: "Dinero", total_net_worth: "Patrimonio Neto Total", incomes: "Ingresos", expenses: "Gastos", savings: "Ahorros", investments: "Inversiones", debts: "Deudas",
@@ -332,13 +291,9 @@ const translations = {
         spiritualist: "Espiritual", student: "Estudiante", teacher: "Profesor", traveler: "Viajero", visionary: "Visionario", volunteer: "Voluntario",
         warrior: "Guerrero", writer: "Escritor", multimedia_artist: "Artista Multimedia",
         no_items_role: "No hay objetos para este rol.", no_items_category: "Aún no hay objetos en esta categoría. Haz clic en 'Añadir Objeto' para empezar.",
-        no_skills_role: "Aún no hay habilidades definidas para este rol.",
         confirm_delete: "¿Estás seguro de que quieres eliminar este objeto?",
-        confirm_delete_skill: "¿Estás seguro de que quieres eliminar esta habilidad?",
         confirm_delete_role_text: "¿Estás seguro de que quieres eliminar el rol '{roleName}'? Esto lo eliminará de todos los objetos asociados.",
         confirm_load: "Esto sobreescribirá tus datos actuales con la versión de tu último guardado. ¿Estás seguro?",
-        confirm_delete_profile: "PELIGRO: Esto eliminará permanentemente todos tus datos de este navegador. Esta acción no se puede deshacer. ¿Estás absolutamente seguro?",
-        confirm_create_profile: "¿Estás seguro de que quieres crear un nuevo perfil? Todos los datos no guardados del perfil actual se perderán.",
     }
 };
 
@@ -367,6 +322,11 @@ function setLanguage(lang) {
     }
 }
 
+/**
+ * NEW: A safe helper function to apply translations to a specific DOM element and its children.
+ * This prevents the infinite loops caused by calling setLanguage() inside a render function.
+ * @param {HTMLElement} element The parent element to apply translations to.
+ */
 function applyTranslations(element) {
     const langDict = translations[currentLanguage] || translations.en;
     element.querySelectorAll('[data-i18n]').forEach(elem => {
@@ -542,9 +502,12 @@ function createLibraryItem(type, title, roles, details = '') {
 }
 
 // =================================================================================
-// ==================== LIFE ROLES PAGE & MODAL LOGIC ==============================
+// ==================== LIFE ROLES PAGE & MODAL LOGIC (REFACTORED) =================
 // =================================================================================
 
+/**
+ * Sets up navigation and event listeners for the new Manage Roles page.
+ */
 function setupManageRolesPage() {
     document.getElementById('manageRolesBtn').addEventListener('click', () => {
         currentPageOrigin = 'lifeRolesPage';
@@ -560,6 +523,9 @@ function setupManageRolesPage() {
     document.getElementById('roleLibrarySearch').addEventListener('input', filterRoleLibrary);
 }
 
+/**
+ * Renders the content for the dedicated Manage Roles page.
+ */
 function renderManageRolesPage() {
     const libraryList = document.getElementById('roleLibraryList');
     const userList = document.getElementById('userRoleList');
@@ -606,7 +572,7 @@ function deleteRoleFromUser(roleKey) {
         dimensionLibraryData.appSettings.userRoles = dimensionLibraryData.appSettings.userRoles.filter(r => r.key !== roleKey);
 
         for (const dimName in dimensionLibraryData) {
-            if (typeof dimensionLibraryData[dimName] === 'object' && !['appSettings', 'resources', 'financials', 'skillsByRole'].includes(dimName)) {
+            if (typeof dimensionLibraryData[dimName] === 'object' && !['appSettings', 'resources', 'financials'].includes(dimName)) {
                 const dim = dimensionLibraryData[dimName];
                 ['challenges', 'goals', 'projects'].forEach(cat => {
                     dim[cat]?.forEach(item => {
@@ -625,10 +591,6 @@ function deleteRoleFromUser(roleKey) {
                     });
                 }
             }
-        }
-        
-        if (dimensionLibraryData.skillsByRole && dimensionLibraryData.skillsByRole[roleKey]) {
-            delete dimensionLibraryData.skillsByRole[roleKey];
         }
 
         saveToLocalStorage();
@@ -662,6 +624,9 @@ function filterRoleLibrary() {
     });
 }
 
+/**
+ * OPTIMIZED: Renders the Life Roles page efficiently.
+ */
 function renderLifeRolesPage() {
     const contentDiv = document.getElementById("lifeRolesContent");
     if (!contentDiv) return;
@@ -675,7 +640,7 @@ function renderLifeRolesPage() {
     });
 
     for (const dimName in dimensionLibraryData) {
-        if (['appSettings', 'resources', 'financials', 'skillsByRole'].includes(dimName)) continue;
+        if (['appSettings', 'resources', 'financials'].includes(dimName)) continue;
         const dim = dimensionLibraryData[dimName];
 
         const processItem = (item, index, category, tab, frequency) => {
@@ -708,6 +673,9 @@ function renderLifeRolesPage() {
     setupRoleCardInteractions(contentDiv);
 }
 
+/**
+ * Creates a role card with interactive sorting and filtering.
+ */
 function createRoleCard(role, itemsForRole) {
     const card = document.createElement('div');
     card.className = 'role-card';
@@ -757,6 +725,9 @@ function createRoleCard(role, itemsForRole) {
     return card;
 }
 
+/**
+ * Sets up click listeners for role cards, including filter/sort actions.
+ */
 function setupRoleCardInteractions(container) {
     container.querySelectorAll('.role-card ul li[data-dimension]').forEach(li => {
         li.addEventListener('click', (e) => {
@@ -793,147 +764,13 @@ function setupRoleCardInteractions(container) {
     });
 }
 // =================================================================================
-// ========================== LIFE SKILLS PAGE LOGIC ===============================
-// =================================================================================
-function renderLifeSkillsPage() {
-    const contentDiv = document.getElementById("lifeSkillsContent");
-    if (!contentDiv) return;
-
-    contentDiv.innerHTML = '';
-    const { userRoles } = dimensionLibraryData.appSettings;
-    const skillsByRole = dimensionLibraryData.skillsByRole || {};
-
-    const fragment = document.createDocumentFragment();
-    userRoles.forEach(role => {
-        const roleCard = document.createElement('div');
-        roleCard.className = 'role-card';
-
-        const skills = skillsByRole[role.key] || [];
-
-        let skillsHtml = skills.map((skill, index) => `
-            <div class="skill-card" data-role-key="${role.key}" data-skill-index="${index}">
-                <div class="skill-header">
-                    <h4>${skill.name}</h4>
-                    <div>
-                        <i class="fas fa-trash delete-skill-btn"></i>
-                    </div>
-                </div>
-                <div class="skill-details">
-                    <span>${getTranslation('label_importance')}: ${skill.importance}</span> | <span>Method: ${skill.method}</span>
-                </div>
-                <div class="skill-domination-bar-container">
-                    <div class="skill-domination-bar" style="width: ${skill.domination}%;"></div>
-                </div>
-                 <small>${skill.domination}% Domination</small>
-            </div>
-        `).join('');
-
-        roleCard.innerHTML = `
-            <div class="role-header">
-                <i class="fas ${role.icon}"></i>
-                <h3>${getTranslation(role.key)}</h3>
-            </div>
-            <div class="skills-list">
-                ${skillsHtml || `<p class="no-items" data-i18n="no_skills_role"></p>`}
-            </div>
-            <div class="add-skill-button-container">
-                 <button class="secondary-btn add-skill-btn" data-role-key="${role.key}"><i class="fas fa-plus"></i> <span data-i18n="title_add_skill"></span></button>
-            </div>
-        `;
-        fragment.appendChild(roleCard);
-    });
-
-    contentDiv.appendChild(fragment);
-    setupLifeSkillsInteractions(contentDiv);
-    applyTranslations(contentDiv);
-}
-
-function setupLifeSkillsInteractions(container) {
-    container.querySelectorAll('.add-skill-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const roleKey = e.currentTarget.dataset.roleKey;
-            openSkillModal(roleKey);
-        });
-    });
-
-    container.querySelectorAll('.delete-skill-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-             const skillCard = e.currentTarget.closest('.skill-card');
-             const { roleKey, skillIndex } = skillCard.dataset;
-             if (confirm(getTranslation('confirm_delete_skill'))) {
-                 deleteSkill(roleKey, parseInt(skillIndex, 10));
-             }
-        });
-    });
-}
-
-function openSkillModal(roleKey) {
-    currentSkillRoleKey = roleKey;
-    const role = dimensionLibraryData.appSettings.userRoles.find(r => r.key === roleKey);
-    const roleName = getTranslation(role.key);
-
-    document.getElementById('skillModalTitle').textContent = `${getTranslation('title_add_skill')} for ${roleName}`;
-    
-    document.getElementById('skillNameInput').value = '';
-    document.getElementById('skillImportanceInput').value = 'Medium';
-    document.getElementById('skillMethodInput').value = '';
-    document.getElementById('skillDominationInput').value = '';
-
-    document.getElementById('skillModal').style.display = 'flex';
-    applyTranslations(document.getElementById('skillModal'));
-}
-
-function closeSkillModal() {
-    document.getElementById('skillModal').style.display = 'none';
-    currentSkillRoleKey = null;
-}
-
-function saveSkillFromModal() {
-    if (!currentSkillRoleKey) return;
-
-    const newSkill = {
-        name: document.getElementById('skillNameInput').value.trim(),
-        importance: document.getElementById('skillImportanceInput').value,
-        method: document.getElementById('skillMethodInput').value.trim(),
-        domination: parseInt(document.getElementById('skillDominationInput').value, 10) || 0,
-    };
-
-    if (!newSkill.name) {
-        alert('Please enter a skill name.');
-        return;
-    }
-    
-    addSkill(currentSkillRoleKey, newSkill);
-    closeSkillModal();
-}
-
-function addSkill(roleKey, skillData) {
-    if (!dimensionLibraryData.skillsByRole) {
-        dimensionLibraryData.skillsByRole = {};
-    }
-    if (!dimensionLibraryData.skillsByRole[roleKey]) {
-        dimensionLibraryData.skillsByRole[roleKey] = [];
-    }
-    dimensionLibraryData.skillsByRole[roleKey].push(skillData);
-    saveToLocalStorage();
-    renderLifeSkillsPage();
-}
-
-function deleteSkill(roleKey, skillIndex) {
-    if (dimensionLibraryData.skillsByRole?.[roleKey]?.[skillIndex]) {
-        dimensionLibraryData.skillsByRole[roleKey].splice(skillIndex, 1);
-        saveToLocalStorage();
-        renderLifeSkillsPage();
-    }
-}
-// =================================================================================
-// ======================== END OF LIFE SKILLS LOGIC ===============================
+// ==================== END OF LIFE ROLES LOGIC ====================================
 // =================================================================================
 
 
-/*****************************************************************
- * * LIFE RESOURCES & FINANCIALS
- * *****************************************************************/
+/**
+ * Renders the main page for Life Resources.
+ */
 function renderLifeResourcesPage() {
     const contentDiv = document.getElementById("resourcesContent");
     if (!contentDiv) return;
@@ -982,6 +819,9 @@ function renderLifeResourcesPage() {
     }
 }
 
+/**
+ * Renders the page for a specific resource category.
+ */
 function renderResourceCategoryPage(context) {
     const { categoryName, translationKey } = context;
     const page = document.getElementById('resourceCategoryDetailPage');
@@ -1013,6 +853,9 @@ function renderResourceCategoryPage(context) {
     applyTranslations(page);
 }
 
+/**
+ * Renders the page for financial details.
+ */
 function renderFinancialsPage() {
     const page = document.getElementById('financialsDetailPage');
     const financials = dimensionLibraryData.financials;
@@ -1088,7 +931,7 @@ function showContextMenu(target, menuItems) {
     menu.style.left = `${rect.left + window.scrollX - menu.offsetWidth + rect.width}px`;
 }
 
-function createCustomSelect(container, options, config = {}) { if (!container || typeof container.innerHTML === 'undefined') { return; } const { placeholder = 'Select...', initialValue = null, isMultiSelect = false } = config; const type = isMultiSelect ? 'checkbox' : 'radio'; const name = container.id; container.innerHTML = ` <button type="button" class="custom-select-button" aria-haspopup="listbox"> <span class="button-text">${placeholder}</span> <i class="fas fa-chevron-down"></i> </button> <div class="custom-select-dropdown" role="listbox"> ${options.map(opt => ` <label> <input type="${type}" name="${name}" value="${opt.value}"> <span class="custom-radio"></span> <span class="role-name">${opt.text}</span> </label> `).join('')} </div>`; const button = container.querySelector('.custom-select-button'); const dropdown = container.querySelector('.custom-select-dropdown'); const allOptions = container.querySelectorAll(`input`); const updateButtonText = () => { const selected = Array.from(allOptions).filter(o => o.checked); const buttonText = container.querySelector('.button-text'); if (selected.length === 0) { buttonText.textContent = placeholder; } else if (isMultiSelect) { if (selected.length === 1) buttonText.textContent = selected[0].parentElement.querySelector('.role-name').textContent; else buttonText.textContent = `${selected.length} Roles Selected`; } else { buttonText.textContent = selected[0].parentElement.querySelector('.role-name').textContent; } }; allOptions.forEach(opt => { if (isMultiSelect) { if (Array.isArray(initialValue) && initialValue.includes(opt.value)) opt.checked = true; } else { if (opt.value === String(initialValue)) opt.checked = true; } opt.addEventListener('change', () => { updateButtonText(); if (!isMultiSelect) dropdown.classList.remove('visible'); }); }); button.addEventListener('click', (e) => { e.stopPropagation(); const isVisible = dropdown.classList.contains('visible'); document.querySelectorAll('.custom-select-dropdown.visible').forEach(d => d.classList.remove('visible')); if (!isVisible) dropdown.classList.add('visible'); }); updateButtonText(); }
+function createCustomSelect(container, options, config = {}) { if (!container || typeof container.innerHTML === 'undefined') { console.error("Invalid container provided to createCustomSelect", container); return; } const { placeholder = 'Select...', initialValue = null, isMultiSelect = false } = config; const type = isMultiSelect ? 'checkbox' : 'radio'; const name = container.id; container.innerHTML = ` <button type="button" class="custom-select-button" aria-haspopup="listbox"> <span class="button-text">${placeholder}</span> <i class="fas fa-chevron-down"></i> </button> <div class="custom-select-dropdown" role="listbox"> ${options.map(opt => ` <label> <input type="${type}" name="${name}" value="${opt.value}"> <span class="custom-radio"></span> <span class="role-name">${opt.text}</span> </label> `).join('')} </div>`; const button = container.querySelector('.custom-select-button'); const dropdown = container.querySelector('.custom-select-dropdown'); const allOptions = container.querySelectorAll(`input`); const updateButtonText = () => { const selected = Array.from(allOptions).filter(o => o.checked); const buttonText = container.querySelector('.button-text'); if (selected.length === 0) { buttonText.textContent = placeholder; } else if (isMultiSelect) { if (selected.length === 1) buttonText.textContent = selected[0].parentElement.querySelector('.role-name').textContent; else buttonText.textContent = `${selected.length} Roles Selected`; } else { buttonText.textContent = selected[0].parentElement.querySelector('.role-name').textContent; } }; allOptions.forEach(opt => { if (isMultiSelect) { if (Array.isArray(initialValue) && initialValue.includes(opt.value)) opt.checked = true; } else { if (opt.value === String(initialValue)) opt.checked = true; } opt.addEventListener('change', () => { updateButtonText(); if (!isMultiSelect) dropdown.classList.remove('visible'); }); }); button.addEventListener('click', (e) => { e.stopPropagation(); const isVisible = dropdown.classList.contains('visible'); document.querySelectorAll('.custom-select-dropdown.visible').forEach(d => d.classList.remove('visible')); if (!isVisible) dropdown.classList.add('visible'); }); updateButtonText(); }
 function getCustomSelectValue(containerId) { const container = document.getElementById(containerId); if (!container) return null; const isMultiSelect = !!container.querySelector('input[type="checkbox"]'); if (isMultiSelect) { return Array.from(container.querySelectorAll('input:checked')).map(cb => cb.value); } const singleSelected = container.querySelector('input:checked'); return singleSelected ? singleSelected.value : null; }
 
 /*****************************************************************
@@ -1139,6 +982,9 @@ function setupAddButtons() {
 function createItem(config) { const itemData = { ...config.defaults }; let isValid = true; for (const prop in config.inputs) { const input = document.getElementById(config.inputs[prop]); if (prop === 'name' && input.value.trim() === '') { alert(`Please enter a name.`); isValid = false; break; } itemData[prop] = input.type === 'number' ? parseFloat(input.value) || 0 : input.value; input.value = ''; } if (!isValid) return; for (const prop in config.selects) { itemData[prop] = getCustomSelectValue(config.selects[prop]); } const targetArray = config.frequency ? dimensionLibraryData[currentDimension].routines[config.frequency] : dimensionLibraryData[currentDimension][config.type + 's']; targetArray.push(itemData); saveToLocalStorage(); renderLibrary(currentDimension, currentTab); }
 function deleteItem(dimension, tab, index, frequency) { if (confirm(getTranslation('confirm_delete'))) { if (tab === "routines") { dimensionLibraryData[dimension].routines[frequency].splice(index, 1); } else { dimensionLibraryData[dimension][tab].splice(index, 1); } saveToLocalStorage(); renderLibrary(dimension, tab); } }
 
+/**
+ * REFACTORED: Renders the item detail page based on a context object.
+ */
 function renderItemDetailPage(context) {
     const { dimension, tab, index, frequency, originPage } = context;
 
@@ -1239,34 +1085,49 @@ function saveItemDetail() {
 /*****************************************************************
  * * IMAGE UPLOADING & CRUD (RESOURCES & FINANCIALS)
  * *****************************************************************/
+
+// This helper function calls our Netlify Function
 async function uploadImage(base64File) {
+    // Show a loading indicator to the user
     document.body.style.cursor = 'wait';
+
     try {
         const response = await fetch('/.netlify/functions/upload-image', {
             method: 'POST',
             body: JSON.stringify({ file: base64File }),
         });
+
+        // If the response is not OK, we'll try to get a useful error message
         if (!response.ok) {
+            // To solve the "body already consumed" error, we CLONE the response.
+            // We can read the body of the clone, leaving the original response body available.
             const responseClone = response.clone();
             let errorMsg = `Image upload failed with status: ${response.status}`;
+            
             try {
+                // Try to parse a JSON error from the cloned response
                 const err = await responseClone.json();
                 errorMsg = err.error || JSON.stringify(err);
             } catch (e) {
+                // If the error response wasn't JSON, get the raw text from the original response
                 errorMsg = await response.text();
             }
             throw new Error(errorMsg);
         }
+
         const { secure_url } = await response.json();
         return secure_url;
     } catch (error) {
+        // The alert will now show the true, underlying error message!
         console.error("Full upload error:", error);
         alert(`Error: ${error.message}`);
         return null;
     } finally {
+        // Hide the loading indicator
         document.body.style.cursor = 'default';
     }
 }
+
 
 function openResourceModal(resourceId = null, category = null) {
     const modal = document.getElementById('resourceModal');
@@ -1301,6 +1162,7 @@ function openResourceModal(resourceId = null, category = null) {
 }
 function closeResourceModal() { document.getElementById('resourceModal').style.display = 'none'; }
 function saveResource() {
+    // The image URL is already on the preview element's src
     const imagePreview = document.getElementById('resourceImagePreview');
 
     const resourceData = {
@@ -1350,9 +1212,12 @@ function previewResourceImage(event) {
     const reader = new FileReader();
     reader.onload = async function(e) {
         const base64 = e.target.result;
+        // Show a temporary preview
         document.getElementById('resourceImagePreview').src = base64;
+        // Upload and get the permanent URL
         const finalUrl = await uploadImage(base64);
         if (finalUrl) {
+            // Update the preview src to the permanent URL
             document.getElementById('resourceImagePreview').src = finalUrl;
         }
     };
@@ -1435,45 +1300,20 @@ function deleteFinancialItem() {
  * * CHART & LIFE QUALITY CALCULATIONS
  * *****************************************************************/
 const chart = new Chart(document.getElementById("radarChart").getContext("2d"), { type: "radar", data: { labels: dimensions.map(d => d.name), datasets: [{ label: "Dimension Score (%)", data: dimensions.map(() => 0), backgroundColor: "rgba(0, 170, 255, 0.2)", borderColor: "rgba(0, 170, 255, 1)", borderWidth: 2, pointBackgroundColor: "rgba(0, 170, 255, 1)" }] }, options: { responsive: true, maintainAspectRatio: false, onClick: (evt, elems) => { if (elems.length > 0) { currentDimension = dimensions[elems[0].index].name; showDimensionInputs(currentDimension); updateNavActive(currentDimension); renderLibrary(currentDimension, currentTab); } }, plugins: { legend: { display: false }, dragData: { round: 0, onDrag: (e, d, i, v) => { inputs[dimensions[i].name].value = v; updateLifeQuality(); showDimensionInputs(dimensions[i].name); } } }, scales: { r: { min: 0, max: 100, ticks: { display: false }, grid: { color: "rgba(255, 255, 255, 0.1)" }, angleLines: { color: "rgba(255, 255, 255, 0.1)" }, pointLabels: { color: "#e0e0e0", font: { size: 12 } } } } } });
-
-function updateLifeQuality() { 
-    let totalObtained = 0; 
-    dimensions.forEach(dim => { 
-        totalObtained += (parseFloat(inputs[dim.name].value) || 0) / 100 * dim.max; 
-    }); 
-    const lifeQuality = totalObtained; 
-    document.getElementById("lifeQualityText").textContent = `Life Quality: ${lifeQuality.toFixed(1)}%`; 
-    const progressBar = document.getElementById("progressBar"); 
-    progressBar.style.width = `${lifeQuality}%`; 
-    
-    const statusColor = getColor(lifeQuality); 
-    
-    progressBar.style.background = statusColor; 
-    updateChart(statusColor, lifeQuality); 
-}
-
-function updateChart(color, lifeQuality) { 
-    chart.data.datasets[0].data = dimensions.map(dim => parseFloat(inputs[dim.name].value) || 0); 
-    chart.data.datasets[0].borderColor = color; 
-    chart.data.datasets[0].pointBackgroundColor = color; 
-    chart.data.datasets[0].backgroundColor = color.replace(')', ', 0.2)').replace('rgb', 'rgba'); 
-    chart.update(); 
-}
-
-function getColor(value) { 
-    if (value >= 70) return "rgb(76, 175, 80)"; 
-    if (value >= 40) return "rgb(255, 152, 0)"; 
-    return "rgb(244, 67, 54)"; 
-}
+function updateLifeQuality() { let totalObtained = 0; dimensions.forEach(dim => { totalObtained += (parseFloat(inputs[dim.name].value) || 0) / 100 * dim.max; }); const lifeQuality = totalObtained; document.getElementById("lifeQualityText").textContent = `Life Quality: ${lifeQuality.toFixed(1)}%`; const progressBar = document.getElementById("progressBar"); progressBar.style.width = `${lifeQuality}%`; const color = getColor(lifeQuality); progressBar.style.background = color; updateChart(color, lifeQuality); }
+function updateChart(color, lifeQuality) { chart.data.datasets[0].data = dimensions.map(dim => parseFloat(inputs[dim.name].value) || 0); chart.data.datasets[0].borderColor = color; chart.data.datasets[0].pointBackgroundColor = color; chart.data.datasets[0].backgroundColor = color.replace(')', ', 0.2)').replace('rgb', 'rgba'); chart.update(); }
+function getColor(value) { if (value >= 70) return "rgb(76, 175, 80)"; if (value >= 40) return "rgb(255, 152, 0)"; return "rgb(244, 67, 54)"; }
 
 /*****************************************************************
  * * LOCAL STORAGE & DATA MIGRATION
  * *****************************************************************/
 function saveToLocalStorage() {
+    // This function is now much simpler! It just saves the whole object.
+    // The image data is now stored as simple URLs from Cloudinary.
     const allData = {
         dimensionScores: dimensions.reduce((acc, dim) => ({ ...acc, [dim.name]: { score: parseFloat(inputs[dim.name].value) || 0 } }), {}),
         libraryData: dimensionLibraryData,
-        visualizationData: [], 
+        visualizationData: [], // This will be rebuilt below
     };
 
     const visArtboard = document.getElementById('visArtboard');
@@ -1482,7 +1322,7 @@ function saveToLocalStorage() {
             const img = container.querySelector('img');
             if (img && img.src) {
                 allData.visualizationData.push({
-                    src: img.src, 
+                    src: img.src, // This is now a Cloudinary URL
                     left: container.style.left,
                     top: container.style.top,
                     width: container.style.width,
@@ -1497,6 +1337,9 @@ function saveToLocalStorage() {
     alert("Your data has been saved!");
 }
 
+/**
+ * A helper function to clean up old data where role names were saved instead of keys.
+ */
 function migrateRoleData(data) {
     if (!data.libraryData?.appSettings?.userRoles) return;
 
@@ -1537,6 +1380,7 @@ function loadFromLocalStorage() {
 
     const parsed = JSON.parse(data);
 
+    // This function is kept for backwards compatibility if old data exists
     migrateRoleData(parsed);
 
     if(parsed.dimensionScores) {
@@ -1549,7 +1393,9 @@ function loadFromLocalStorage() {
 
     const loadedLibrary = parsed.libraryData || {};
     if (!loadedLibrary.resources) loadedLibrary.resources = [];
-    if (!loadedLibrary.financials) loadedLibrary.financials = defaultAppData.financials;
+    if (!loadedLibrary.financials) {
+        loadedLibrary.financials = { incomes: [], expenses: [], savings: [], investments: [], debts: [] };
+    }
     const financialKeys = ['incomes', 'expenses', 'savings', 'investments', 'debts'];
     financialKeys.forEach(key => {
         if (!loadedLibrary.financials[key]) {
@@ -1559,12 +1405,6 @@ function loadFromLocalStorage() {
     if(!loadedLibrary.appSettings) {
         loadedLibrary.appSettings = defaultAppData.appSettings;
     }
-    if(!loadedLibrary.appSettings.accentInteractive) {
-        loadedLibrary.appSettings.accentInteractive = defaultAppData.appSettings.accentInteractive;
-    }
-    if(!loadedLibrary.skillsByRole) {
-        loadedLibrary.skillsByRole = defaultAppData.skillsByRole;
-    }
     
     dimensionLibraryData = loadedLibrary;
 
@@ -1573,6 +1413,7 @@ function loadFromLocalStorage() {
         visArtboard.innerHTML = ''; // Clear any existing images
         if (parsed.visualizationData && Array.isArray(parsed.visualizationData)) {
             parsed.visualizationData.forEach(imgData => {
+                // The src is now a URL, so we can use it directly
                 addImageToArtboard(imgData.src, imgData);
             });
         }
@@ -1580,14 +1421,6 @@ function loadFromLocalStorage() {
 
     initializeDashboard();
     console.log("Data loaded!");
-}
-
-/*****************************************************************
- * * PROFILE MODAL LOGIC
- * *****************************************************************/
-function setupProfileModalButtons() {
-    document.getElementById('deleteProfileBtn').addEventListener('click', deleteProfile);
-    document.getElementById('createProfileBtn').addEventListener('click', createNewProfile);
 }
 
 function openProfileModal() {
@@ -1599,6 +1432,7 @@ function openProfileModal() {
 function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
 function saveProfile() {
     dimensionLibraryData.appSettings.userName = document.getElementById('profileNameInput').value;
+    // The image src is already the permanent Cloudinary URL
     dimensionLibraryData.appSettings.userImage = document.getElementById('profileImagePreview').src;
     updateUserProfileDisplay();
     saveToLocalStorage();
@@ -1611,33 +1445,28 @@ function previewProfileImage(event) {
     const reader = new FileReader();
     reader.onload = async function(e) {
         const base64 = e.target.result;
+        // Show a temporary local preview for responsiveness
         document.getElementById('profileImagePreview').src = base64;
 
+        // Upload to get the permanent URL
         const finalUrl = await uploadImage(base64);
         if (finalUrl) {
+            // Now update the src to the permanent URL from Cloudinary
             document.getElementById('profileImagePreview').src = finalUrl;
+        } else {
+           // Handle upload failure, maybe revert to a default image
+           // For now, we'll just leave the local preview
         }
     };
     reader.readAsDataURL(file);
 }
 
-function deleteProfile() {
-    if (confirm(getTranslation('confirm_delete_profile'))) {
-        localStorage.removeItem("lifeQualityAppData");
-        location.reload();
-    }
-}
-
-function createNewProfile() {
-    if (confirm(getTranslation('confirm_create_profile'))) {
-        localStorage.removeItem("lifeQualityAppData");
-        location.reload();
-    }
-}
 
 /*****************************************************************
  * * LIFE VISUALIZATION PAGE LOGIC
  * *****************************************************************/
+
+// This is defined outside the function so it can be accessed by loadFromLocalStorage
 let addImageToArtboard = () => {};
 
 function setupVisualizationPage() {
@@ -1650,6 +1479,7 @@ function setupVisualizationPage() {
         return;
     }
 
+    // --- State Management ---
     let scale = 0.3;
     let panX = 50;
     let panY = 50;
@@ -1658,6 +1488,11 @@ function setupVisualizationPage() {
     let panStart = { x: 0, y: 0 };
     let currentlySelected = null;
 
+    // --- Core Functions ---
+
+    /**
+     * Applies transforms and updates the dynamic grid.
+     */
     function applyTransform() {
         artboard.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
         const gridSize = 100 * scale;
@@ -1665,6 +1500,9 @@ function setupVisualizationPage() {
         viewport.style.backgroundPosition = `${panX % gridSize}px ${panY % gridSize}px`;
     }
 
+    /**
+     * Deselects any currently selected image.
+     */
     function deselectAll() {
         if (currentlySelected) {
             currentlySelected.classList.remove('selected');
@@ -1672,6 +1510,9 @@ function setupVisualizationPage() {
         }
     }
 
+    /**
+     * Handles zooming with Ctrl + Mouse Wheel.
+     */
     function handleZoom(event) {
         if (!event.ctrlKey) return;
         event.preventDefault();
@@ -1686,6 +1527,11 @@ function setupVisualizationPage() {
         applyTransform();
     }
 
+    /**
+     * MODIFIED: Now accepts an optional 'savedData' object to recreate images from storage.
+     * @param {string} src - The image source (could be a local preview or a Cloudinary URL).
+     * @param {object|null} savedData - Object containing position and size data.
+     */
     addImageToArtboard = (src, savedData = null) => {
         const container = document.createElement('div');
         container.className = 'image-container';
@@ -1694,6 +1540,7 @@ function setupVisualizationPage() {
         img.src = src;
         img.className = 'visualization-image';
 
+        // Add the handles
         container.innerHTML += `
             <div class="resize-handle top-left"></div>
             <div class="resize-handle top-right"></div>
@@ -1702,6 +1549,7 @@ function setupVisualizationPage() {
         `;
         container.prepend(img);
 
+        // --- Deletion Logic ---
         container.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -1709,17 +1557,21 @@ function setupVisualizationPage() {
             showContextMenu(e.target, menuActions);
         });
 
+        // --- State variables for this specific image ---
         let isDragging = false;
 
+        // --- Combined Dragging and Selection Logic ---
         img.addEventListener('mousedown', (e) => {
-            if (e.button !== 0) return;
+            if (e.button !== 0) return; // Only for left-click
             e.preventDefault();
             e.stopPropagation();
 
+            // Select the image
             deselectAll();
             container.classList.add('selected');
             currentlySelected = container;
 
+            // Start dragging
             isDragging = true;
             container.classList.add('dragging');
             const originalPos = { x: parseFloat(container.style.left) || 0, y: parseFloat(container.style.top) || 0 };
@@ -1744,10 +1596,11 @@ function setupVisualizationPage() {
             window.addEventListener('mouseup', onMouseUp);
         });
 
+        // --- Resizing Logic ---
         container.querySelectorAll('.resize-handle').forEach(handle => {
             handle.addEventListener('mousedown', (e) => {
                 e.preventDefault();
-                e.stopPropagation();
+                e.stopPropagation(); // Stop the drag event from firing
 
                 let isResizing = true;
                 container.classList.add('resizing');
@@ -1763,6 +1616,7 @@ function setupVisualizationPage() {
                     if (!isResizing) return;
 
                     const dx = (moveEvent.clientX - resizeStart.x) / scale;
+
                     let newWidth, newHeight, newLeft, newTop;
 
                     if (isLeft) {
@@ -1780,6 +1634,7 @@ function setupVisualizationPage() {
                         newHeight = newWidth / aspectRatio;
                         newTop = originalContainerPos.y;
                     }
+
 
                     if (newWidth > 20 && newHeight > 20) {
                         container.style.width = `${newWidth}px`;
@@ -1801,12 +1656,15 @@ function setupVisualizationPage() {
             });
         });
 
+        // --- Initial Position & Size ---
         if (savedData) {
+            // Load from saved data
             container.style.width = savedData.width;
             container.style.height = savedData.height;
             container.style.left = savedData.left;
             container.style.top = savedData.top;
         } else {
+            // Set default size for new images
             img.onload = () => {
                  const defaultWidth = 350;
                  const aspectRatio = img.naturalWidth / img.naturalHeight;
@@ -1827,6 +1685,7 @@ function setupVisualizationPage() {
         artboard.appendChild(container);
     }
 
+    // --- Event Listeners Setup ---
     viewport.addEventListener('mousedown', (e) => {
         if (e.target === viewport || e.target === artboard) {
             deselectAll();
@@ -1859,11 +1718,13 @@ function setupVisualizationPage() {
     viewport.addEventListener('wheel', handleZoom, { passive: false });
 
     window.addEventListener('keydown', (e) => {
+        // First, check if the user is typing in an input field.
         const activeEl = document.activeElement;
         const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
         
+        // Only prevent the default action if the spacebar is pressed AND an input is NOT focused.
         if (e.code === 'Space' && !isInputFocused) {
-            e.preventDefault();
+            e.preventDefault(); // Stop the page from scrolling
             if (!isSpacePressed) {
                 isSpacePressed = true;
                 viewport.style.cursor = 'grab';
@@ -1885,9 +1746,12 @@ function setupVisualizationPage() {
             const reader = new FileReader();
             reader.onload = async (e) => {
                 const base64 = e.target.result;
+                // Add to artboard immediately with local preview
                 addImageToArtboard(base64);
+                // Upload and replace src with permanent URL
                 const finalUrl = await uploadImage(base64);
                 if (finalUrl) {
+                    // Find the last image added and update its src
                     const lastImage = artboard.querySelector('.image-container:last-child img');
                     if (lastImage) {
                         lastImage.src = finalUrl;
@@ -1899,5 +1763,6 @@ function setupVisualizationPage() {
         }
     });
 
+    // --- Initial Setup ---
     applyTransform();
 }
