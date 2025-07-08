@@ -10,7 +10,10 @@
     --bg-tertiary: #3a3a3a;
     --text-primary: #e0e0e0;
     --text-secondary: #b0b0b0;
-    --accent-primary: #00aaff;
+    /* This is the NEW variable for user customization */
+    --accent-interactive: #00aaff; 
+    /* This is the original, now mainly for JS use */
+    --accent-primary: #00aaff; 
     --accent-secondary: #4caf50;
     --border-color: #555;
     --danger-color: #f44336;
@@ -27,6 +30,7 @@ body[data-theme="light"] {
     --bg-tertiary: #eef0f2;
     --text-primary: #212529;
     --text-secondary: #6c757d;
+    --accent-interactive: #007bff;
     --accent-primary: #007bff;
     --accent-secondary: #28a745;
     --border-color: #dee2e6;
@@ -63,7 +67,7 @@ input, textarea, select, button {
 }
 input:focus, textarea:focus, select:focus {
     outline: none;
-    border-color: var(--accent-primary);
+    border-color: var(--accent-interactive);
 }
 input[type="text"][disabled] {
     background-color: var(--bg-tertiary);
@@ -79,7 +83,7 @@ input[type=number] { -moz-appearance: textfield; }
 button { cursor: pointer; }
 
 .primary-btn {
-    background-color: var(--accent-primary);
+    background-color: var(--accent-interactive);
     color: white;
     border: none;
     font-weight: 500;
@@ -152,7 +156,7 @@ button { cursor: pointer; }
     background-color: var(--bg-tertiary);
 }
 .user-info { text-align: center; margin-bottom: 30px; padding: 10px; }
-.user-info img { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--accent-primary); margin-bottom: 10px; object-fit: cover; }
+.user-info img { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--accent-interactive); margin-bottom: 10px; object-fit: cover; }
 .user-info h2 { margin: 0; font-weight: 500; color: var(--text-primary); }
 
 nav { flex-grow: 1; }
@@ -161,13 +165,33 @@ nav ul li { margin-bottom: 8px; border-radius: 6px; transition: background 0.3s;
 nav ul li a { display: flex; align-items: center; gap: 12px; color: var(--text-secondary); text-decoration: none; padding: 12px 15px; font-weight: 500; }
 nav ul li .fas { width: 20px; text-align: center; }
 nav ul li:hover { background: var(--bg-tertiary); }
-nav ul li.active { background: var(--accent-primary); }
+nav ul li.active { background: var(--accent-interactive); }
 nav ul li.active a { color: white; }
 
 .nav-footer { margin-top: 30px; display: flex; flex-direction: column; gap: 10px; }
 .options-btn { margin-bottom: 10px; }
 .button-group { display: flex; flex-direction: column; gap: 10px; }
 .button-group button { width: 100%; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+#donateBtn {
+    margin-top: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    background-color: transparent;
+    border: 1px solid var(--accent-secondary);
+    color: var(--accent-secondary);
+}
+#donateBtn:hover {
+    background-color: var(--accent-secondary);
+    color: white;
+}
+#donateBtn .fas {
+    color: inherit;
+}
 
 /* ---------------------------- */
 /* DASHBOARD (LIFE BALANCE)     */
@@ -192,11 +216,11 @@ nav ul li.active a { color: white; }
 .library-section h3 { margin-top: 0; }
 .dimension-nav ul { list-style: none; display: flex; gap: 5px; flex-wrap: wrap; padding: 0; margin: 0 0 15px 0; }
 .dimension-nav ul li { padding: 8px 12px; cursor: pointer; border-radius: 20px; background: var(--bg-tertiary); transition: background 0.3s; white-space: nowrap; font-size: 0.9rem; }
-.dimension-nav ul li.active { background: var(--accent-primary); color: white; }
+.dimension-nav ul li.active { background: var(--accent-interactive); color: white; }
 
 .library-tabs ul { list-style: none; display: flex; padding: 0; margin-bottom: 15px; border-bottom: 2px solid var(--bg-tertiary); }
 .library-tabs ul li { padding: 10px 20px; cursor: pointer; margin-bottom: -2px; color: var(--text-secondary); border-bottom: 2px solid transparent; }
-.library-tabs ul li.active { color: var(--accent-primary); border-bottom-color: var(--accent-primary); }
+.library-tabs ul li.active { color: var(--accent-interactive); border-bottom-color: var(--accent-interactive); }
 
 .tab-content { display: none; flex-direction: column; gap: 10px; }
 .tab-content.active { display: flex; }
@@ -225,7 +249,7 @@ nav ul li.active a { color: white; }
 .card-title { font-size: 1rem; font-weight: 500; margin-bottom: 4px; }
 .card-details { display: flex; flex-wrap: wrap; column-gap: 15px; row-gap: 5px; font-size: 0.8rem; color: var(--text-secondary); }
 .card-roles { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
-.life-role-tag { background-color: var(--accent-primary); color: #ffffff; padding: 2px 8px; font-size: 0.75rem; border-radius: 10px; font-weight: 500; }
+.life-role-tag { background-color: var(--accent-interactive); color: #ffffff; padding: 2px 8px; font-size: 0.75rem; border-radius: 10px; font-weight: 500; }
 
 .add-item-container { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 15px; }
 .add-item-container > * { flex: 1 1 auto; }
@@ -242,7 +266,7 @@ nav ul li.active a { color: white; }
 .roles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
 .role-card { background: var(--bg-secondary); border-radius: 12px; padding: 20px; text-align: left; }
 .role-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
-.role-header .fas { font-size: 2rem; color: var(--accent-primary); }
+.role-header .fas { font-size: 2rem; color: var(--accent-interactive); }
 .role-header h3 { margin: 0; font-size: 1.5rem; font-weight: 500; flex-grow: 1; }
 .role-header-actions { display: flex; gap: 15px; }
 .role-header-actions .fas { font-size: 1rem; color: var(--text-secondary); cursor: pointer; transition: color 0.2s; }
@@ -270,6 +294,68 @@ nav ul li.active a { color: white; }
 .role-card li.routine-item { border-left-color: #9c27b0; }
 
 /* ---------------------------- */
+/* "AAA Game" - LIFE SKILLS PAGE */
+/* ---------------------------- */
+.skill-card {
+    background: var(--bg-tertiary);
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+.skill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.skill-header h4 {
+    margin: 0;
+    font-weight: 500;
+}
+.skill-header div .fas {
+    margin-left: 10px;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+.skill-header div .fas:hover {
+    color: var(--text-primary);
+}
+.skill-header div .delete-skill-btn:hover {
+    color: var(--danger-color);
+}
+.skill-details {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+.skill-domination-bar-container {
+    background: var(--bg-primary);
+    border-radius: 10px;
+    overflow: hidden;
+    height: 8px;
+    margin-bottom: 4px;
+}
+.skill-domination-bar {
+    height: 100%;
+    width: 0;
+    background: var(--accent-interactive);
+    transition: width 0.3s, background-color 0.3s;
+}
+.skill-card small {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+.add-skill-button-container {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+.add-skill-button-container .add-skill-btn {
+    width: 100%;
+}
+
+
+/* ---------------------------- */
 /* "AAA Game" - LIFE RESOURCES  */
 /* ---------------------------- */
 .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
@@ -288,9 +374,9 @@ nav ul li.active a { color: white; }
 .resource-category-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px var(--box-shadow-light);
-    border-color: var(--accent-primary);
+    border-color: var(--accent-interactive);
 }
-.resource-category-card .resource-icon { font-size: 3rem; margin-bottom: 15px; color: var(--accent-primary); }
+.resource-category-card .resource-icon { font-size: 3rem; margin-bottom: 15px; color: var(--accent-interactive); }
 .resource-category-card h3 { margin: 0 0 5px 0; font-size: 1.2rem; font-weight: 500; }
 .resource-category-card .resource-stat-label { font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); }
 
@@ -307,7 +393,7 @@ nav ul li.active a { color: white; }
 .resource-item-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px var(--box-shadow-light);
-    border-color: var(--accent-primary);
+    border-color: var(--accent-interactive);
 }
 .resource-item-card-image {
     width: 100%;
@@ -326,7 +412,7 @@ nav ul li.active a { color: white; }
     border-radius: 12px;
     text-align: center;
     margin-bottom: 20px;
-    border-left: 8px solid var(--accent-primary);
+    border-left: 8px solid var(--accent-interactive);
 }
 .total-balance-card.positive { border-left-color: var(--accent-secondary); }
 .total-balance-card.negative { border-left-color: var(--danger-color); }
@@ -436,8 +522,29 @@ nav ul li.active a { color: white; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 .modal-actions .danger-btn { margin-right: auto; }
 
-/* Resource Modal Specifics & Profile Modal */
-.resource-modal-fields { display: flex; gap: 20px; }
+
+/* Profile Modal Specifics */
+#profileModal .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#profileModal .modal-actions .danger-btn {
+    margin-right: 0; /* Override default margin */
+}
+#profileModal .modal-actions > button:nth-child(2) {
+    margin-right: auto; /* Push the middle buttons apart */
+}
+
+
+/* Resource Modal Specifics & Skill Modal*/
+.resource-modal-fields,
+#skillModal .resource-form-inputs { 
+    display: flex; gap: 20px; 
+}
+#skillModal .resource-form-inputs {
+    flex-direction: column;
+}
 .resource-image-upload { flex: 0 0 150px; text-align: center; }
 .resource-image-upload img { width: 150px; height: 150px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); }
 .resource-image-upload input[type="file"] { display: none; }
@@ -451,12 +558,45 @@ nav ul li.active a { color: white; }
 .option-item { display: flex; justify-content: space-between; align-items: center; }
 .option-item label { font-size: 1.1rem; font-weight: 500; }
 
+.option-item input[type="color"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 34px;
+    height: 34px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+.option-item input[type="color"]::-webkit-color-swatch {
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+}
+.option-item input[type="color"]::-moz-color-swatch {
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+}
+
+/* Base Toggle Switch Styles */
 .toggle-switch { position: relative; display: inline-block; width: 60px; height: 34px; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-tertiary); transition: .4s; border-radius: 34px; }
 .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: var(--toggle-handle-color); transition: .4s; border-radius: 50%; }
-input:checked + .slider { background-color: var(--accent-primary); }
+input:checked + .slider { background-color: var(--accent-interactive); }
 input:checked + .slider:before { transform: translateX(26px); }
+
+/* NEW: Small Toggle for Routine Cards */
+.card-detail-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-grow: 1;
+}
+.toggle-switch.small-toggle { width: 44px; height: 24px; }
+.toggle-switch.small-toggle .slider:before { height: 18px; width: 18px; left: 3px; bottom: 3px; }
+.toggle-switch.small-toggle input:checked + .slider:before { transform: translateX(20px); }
+
 
 /* Roles Management Page */
 .roles-management-container {
@@ -567,10 +707,10 @@ input:checked + .slider:before { transform: translateX(26px); }
     height: 40px;
     text-align: left;
 }
-.custom-select-button:hover { border-color: var(--accent-primary); }
+.custom-select-button:hover { border-color: var(--accent-interactive); }
 .custom-select-button:focus, .custom-select-button.active {
     outline: none;
-    border-color: var(--accent-primary);
+    border-color: var(--accent-interactive);
 }
 .custom-select-button .button-text {
     overflow: hidden;
@@ -637,11 +777,10 @@ input:checked + .slider:before { transform: translateX(26px); }
 /* LIFE VISUALIZATION PAGE      */
 /* ---------------------------- */
 
-/* Make the page container a flex column to position the toolbar and viewport */
 #lifeVisualizationPage {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 40px); /* Full viewport height minus body padding */
+    height: calc(100vh - 40px);
     gap: 15px;
 }
 
@@ -667,46 +806,40 @@ input:checked + .slider:before { transform: translateX(26px); }
     font-family: monospace;
 }
 
-/* The viewport is the visible container for our artboard. */
 #visViewport {
     width: 100%;
     height: 100%;
     background-color: #000000;
-    overflow: hidden; /* This is crucial! It clips the artboard. */
-    position: relative; /* Needed for positioning child elements. */
+    overflow: hidden;
+    position: relative;
     border-radius: 12px;
     cursor: default;
-    /* The grid is now on the viewport for consistent scaling */
     background-image:
         linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
 }
 
 #visViewport.panning {
-    cursor: grabbing; /* Cursor when actively panning */
+    cursor: grabbing;
 }
 
-/* The artboard is the massive space where content lives. */
 #visArtboard {
     width: 7000px;
     height: 7000px;
-    position: relative; /* Allows absolute positioning of images inside. */
+    position: relative;
     background-color: #000000;
-    transform-origin: 0 0; /* Sets the point for zoom and pan transforms. */
+    transform-origin: 0 0;
 }
 
-/* This is a wrapper for the image and its controls */
 .image-container {
     position: absolute;
 }
 
-/* Styles for the images placed on the artboard. */
 .visualization-image {
     display: block;
     width: 100%;
     height: 100%;
     cursor: grab;
-    /* FIX: Add a transparent border to prevent layout shift on hover/selection */
     border: 3px solid transparent;
     transition: border-color 0.2s ease-in-out;
 }
@@ -716,27 +849,22 @@ input:checked + .slider:before { transform: translateX(26px); }
     cursor: grabbing;
 }
 
-/* NEW: Add a border on hover and when selected for clear feedback */
 .image-container:hover .visualization-image,
 .image-container.selected .visualization-image {
-    border-color: var(--accent-primary);
+    border-color: var(--accent-interactive);
 }
 
-
-/* Styles for the resize handles */
 .resize-handle {
     position: absolute;
     width: 12px;
     height: 12px;
-    background-color: var(--accent-primary);
+    background-color: var(--accent-interactive);
     border: 2px solid var(--bg-secondary);
     border-radius: 50%;
-    /* Handles are hidden by default */
     display: none;
     z-index: 1001;
 }
 
-/* Show handles only when the container is selected */
 .image-container.selected .resize-handle {
     display: block;
 }
