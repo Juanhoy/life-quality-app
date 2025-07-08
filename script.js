@@ -504,13 +504,27 @@ function renderLibrary(dimension, tab) {
 function createLibraryItem(type, title, roles, details = '', skills = '', compliance = '') {
     const div = document.createElement("div");
     div.className = `library-item ${type}-card`;
-    div.innerHTML = `
-        <div class="card-title">${title}</div>
-        ${details}
-        ${compliance}
-        ${roles}
-        ${skills} 
-        <i class="fas fa-ellipsis-h menu-icon"></i>`;
+
+    if (type === 'routine') {
+        // Special layout for routine cards to group the actions
+        div.innerHTML = `
+            <div class="card-actions-container">
+                ${compliance}
+                <i class="fas fa-ellipsis-h menu-icon"></i>
+            </div>
+            <div class="card-title">${title}</div>
+            ${details}
+            ${roles}
+            ${skills}`;
+    } else {
+        // Original layout for all other cards
+        div.innerHTML = `
+            <i class="fas fa-ellipsis-h menu-icon"></i>
+            <div class="card-title">${title}</div>
+            ${details}
+            ${roles}
+            ${skills}`;
+    }
     return div;
 }
 
