@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupLeftNav();
     setupTabSwitching();
     setupAddButtons();
-    setupVisualizationPage(); // <-- Called BEFORE loading
+    setupVisualizationPage();
     loadFromLocalStorage();
     setupTopNav();
     setupOptions(); 
@@ -110,7 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('saveItemDetailBtn').addEventListener('click', saveItemDetail);
 
-    // Event Listeners for the Skill Modal
     document.getElementById('saveSkillBtn').addEventListener('click', saveSkill);
     document.getElementById('cancelSkillBtn').addEventListener('click', closeSkillModal);
     document.getElementById('deleteSkillBtn').addEventListener('click', deleteSkill);
@@ -126,12 +125,7 @@ function initializeDashboard() {
     setLanguage(localStorage.getItem('appLanguage') || 'en');
 }
 
-/**
- * Handles closing pop-ups (modals, selects, context menus)
- * when clicking outside of them.
- */
 function handleGlobalClick(event) {
-    // Close Custom Select dropdowns
     document.querySelectorAll('.custom-select-dropdown.visible').forEach(dropdown => {
         const container = dropdown.closest('.custom-select-container');
         if (container && !container.contains(event.target)) {
@@ -139,56 +133,32 @@ function handleGlobalClick(event) {
         }
     });
 
-    // Close Context Menus
     document.querySelectorAll(".context-menu").forEach(menu => {
         if (!menu.contains(event.target)) {
              menu.remove();
         }
     });
 
-    // Close any open modal by clicking on the overlay
     const openModal = document.querySelector('.modal-overlay[style*="display: flex"]');
     if (openModal && event.target === openModal) {
         openModal.style.display = 'none';
     }
 }
 
-/**
- * REFACTORED: The single source of truth for page navigation.
- * @param {string} pageId The ID of the page to show.
- * @param {object} context An optional object with data for the page.
- */
 function showPage(pageId, context = {}) {
     document.querySelectorAll(".page").forEach(page => page.style.display = "none");
     const targetPage = document.getElementById(pageId);
     if(targetPage) targetPage.style.display = "block";
 
-    // Call the correct render function based on the page ID
     switch (pageId) {
-        case 'lifeRolesPage':
-            renderLifeRolesPage();
-            break;
-        case 'lifeSkillsPage':
-            renderLifeSkillsPage();
-            break;
-        case 'lifeResourcesPage':
-            renderLifeResourcesPage();
-            break;
-        case 'lifeBalancePage':
-            renderLibrary(currentDimension, currentTab);
-            break;
-        case 'manageRolesPage':
-            renderManageRolesPage();
-            break;
-        case 'financialsDetailPage':
-            renderFinancialsPage();
-            break;
-        case 'resourceCategoryDetailPage':
-            renderResourceCategoryPage(context);
-            break;
-        case 'itemDetailPage':
-            renderItemDetailPage(context);
-            break;
+        case 'lifeRolesPage': renderLifeRolesPage(); break;
+        case 'lifeSkillsPage': renderLifeSkillsPage(); break;
+        case 'lifeResourcesPage': renderLifeResourcesPage(); break;
+        case 'lifeBalancePage': renderLibrary(currentDimension, currentTab); break;
+        case 'manageRolesPage': renderManageRolesPage(); break;
+        case 'financialsDetailPage': renderFinancialsPage(); break;
+        case 'resourceCategoryDetailPage': renderResourceCategoryPage(context); break;
+        case 'itemDetailPage': renderItemDetailPage(context); break;
     }
 }
 
@@ -336,11 +306,6 @@ function setLanguage(lang) {
     }
 }
 
-/**
- * NEW: A safe helper function to apply translations to a specific DOM element and its children.
- * This prevents the infinite loops caused by calling setLanguage() inside a render function.
- * @param {HTMLElement} element The parent element to apply translations to.
- */
 function applyTranslations(element) {
     const langDict = translations[currentLanguage] || translations.en;
     element.querySelectorAll('[data-i18n]').forEach(elem => {
@@ -471,15 +436,52 @@ function renderLibrary(dimension, tab) {
         const rolesHtml = createRolesHtml(item.lifeRoles);
         const skillsHtml = createSkillsHtml(item.associatedSkills);
         let detailsHtml = '';
+
         if (item.status !== undefined) detailsHtml += `<span>${getTranslation('label_status')}: ${item.status}%</span>`;
         if (item.importance) detailsHtml += `<span>${getTranslation('label_importance')}: ${item.importance}</span>`;
         if (item.dueDate) detailsHtml += `<span>${getTranslation('label_due_date')}: ${item.dueDate || "N/A"}</span>`;
-        if (item.compliance !== undefined) detailsHtml += `<span>${getTranslation('label_compliance')}: ${item.compliance ? getTranslation('yes') : getTranslation('no')}</span>`;
+        
+        let complianceHtml = '';
+        if (item.compliance !== undefined) {
+            const toggleId = `compliance-toggle-${dimension}-${frequency || type}-${index}`;
+            complianceHtml = `
+                <div class="compliance-toggle-container">
+                    <span class="toggle-label">${getTranslation('label_compliance')}:</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="${toggleId}" ${item.compliance ? 'checked' : ''}>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            `;
+        }
 
-        const div = createLibraryItem(type, item.name, rolesHtml, `<div class="card-details">${detailsHtml}</div>`, skillsHtml);
+        const div = createLibraryItem(type, item.name, rolesHtml, `<div class="card-details">${detailsHtml}</div>`, skillsHtml, complianceHtml);
 
         const context = { dimension, tab: type + 's', index, frequency, originPage: 'lifeBalancePage' };
-        div.addEventListener('click', () => showPage('itemDetailPage', context));
+        
+        // Main card click listener
+        div.addEventListener('click', () => {
+            showPage('itemDetailPage', context);
+        });
+
+        // Event listener for the toggle's container to block clicks
+        const toggleContainer = div.querySelector('.compliance-toggle-container');
+        if (toggleContainer) {
+            toggleContainer.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        // Event listener for the toggle's functionality
+        const complianceToggle = div.querySelector('.compliance-toggle-container input');
+        if (complianceToggle) {
+            complianceToggle.addEventListener('change', (e) => {
+                // No need to stop propagation on 'change' if the container 'click' is already stopped
+                const routine = dimensionLibraryData[dimension].routines[frequency][index];
+                routine.compliance = e.target.checked;
+                saveToLocalStorage(false); // Save without showing alert
+            });
+        }
 
         div.querySelector(".menu-icon").addEventListener("click", (e) => {
             e.stopPropagation();
@@ -505,12 +507,13 @@ function renderLibrary(dimension, tab) {
     initializeAllCustomSelects();
 }
 
-function createLibraryItem(type, title, roles, details = '', skills = '') {
+function createLibraryItem(type, title, roles, details = '', skills = '', compliance = '') {
     const div = document.createElement("div");
     div.className = `library-item ${type}-card`;
     div.innerHTML = `
         <div class="card-title">${title}</div>
         ${details}
+        ${compliance}
         ${roles}
         ${skills} 
         <i class="fas fa-ellipsis-h menu-icon"></i>`;
@@ -521,9 +524,6 @@ function createLibraryItem(type, title, roles, details = '', skills = '') {
 // ==================== LIFE ROLES PAGE & MODAL LOGIC (REFACTORED) =================
 // =================================================================================
 
-/**
- * Sets up navigation and event listeners for the new Manage Roles page.
- */
 function setupManageRolesPage() {
     document.getElementById('manageRolesBtn').addEventListener('click', () => {
         currentPageOrigin = 'lifeRolesPage';
@@ -539,9 +539,6 @@ function setupManageRolesPage() {
     document.getElementById('roleLibrarySearch').addEventListener('input', filterRoleLibrary);
 }
 
-/**
- * Renders the content for the dedicated Manage Roles page.
- */
 function renderManageRolesPage() {
     const libraryList = document.getElementById('roleLibraryList');
     const userList = document.getElementById('userRoleList');
@@ -640,9 +637,6 @@ function filterRoleLibrary() {
     });
 }
 
-/**
- * OPTIMIZED: Renders the Life Roles page efficiently.
- */
 function renderLifeRolesPage() {
     const contentDiv = document.getElementById("lifeRolesContent");
     if (!contentDiv) return;
@@ -689,9 +683,6 @@ function renderLifeRolesPage() {
     setupRoleCardInteractions(contentDiv);
 }
 
-/**
- * Creates a role card with interactive sorting and filtering.
- */
 function createRoleCard(role, itemsForRole) {
     const card = document.createElement('div');
     card.className = 'role-card';
@@ -741,9 +732,6 @@ function createRoleCard(role, itemsForRole) {
     return card;
 }
 
-/**
- * Sets up click listeners for role cards, including filter/sort actions.
- */
 function setupRoleCardInteractions(container) {
     container.querySelectorAll('.role-card ul li[data-dimension]').forEach(li => {
         li.addEventListener('click', (e) => {
@@ -845,7 +833,7 @@ function createSkillCard(role, skills) {
         });
     });
     
-    applyTranslations(card); // Apply translations to the newly created card
+    applyTranslations(card);
     return card;
 }
 
@@ -858,9 +846,8 @@ function openSkillModal(context) {
     const deleteBtn = document.getElementById('deleteSkillBtn');
 
     if (index !== undefined && index !== null) {
-        // Editing existing skill
         const skill = dimensionLibraryData.skills[index];
-        editingSkillInfo.roleKey = skill.roleKey; // Ensure roleKey is set for saving
+        editingSkillInfo.roleKey = skill.roleKey;
         title.textContent = getTranslation("title_edit_skill");
         document.getElementById('skillNameInput').value = skill.name;
         document.getElementById('skillImportanceInput').value = skill.importance;
@@ -868,7 +855,6 @@ function openSkillModal(context) {
         document.getElementById('skillXpInput').value = skill.xpLevel;
         deleteBtn.style.display = 'inline-block';
     } else {
-        // Adding new skill
         title.textContent = getTranslation("title_add_new_skill");
         document.getElementById('skillNameInput').value = '';
         document.getElementById('skillImportanceInput').value = 'High';
@@ -900,10 +886,8 @@ function saveSkill() {
     }
 
     if (index !== undefined && index !== null) {
-        // Update existing skill
         dimensionLibraryData.skills[index] = skillData;
     } else {
-        // Add new skill
         dimensionLibraryData.skills.push(skillData);
     }
 
@@ -1161,9 +1145,6 @@ function setupAddButtons() {
 function createItem(config) { const itemData = { ...config.defaults }; let isValid = true; for (const prop in config.inputs) { const input = document.getElementById(config.inputs[prop]); if (prop === 'name' && input.value.trim() === '') { alert(`Please enter a name.`); isValid = false; break; } itemData[prop] = input.type === 'number' ? parseFloat(input.value) || 0 : input.value; input.value = ''; } if (!isValid) return; for (const prop in config.selects) { itemData[prop] = getCustomSelectValue(config.selects[prop]); } const targetArray = config.frequency ? dimensionLibraryData[currentDimension].routines[config.frequency] : dimensionLibraryData[currentDimension][config.type + 's']; targetArray.push(itemData); saveToLocalStorage(); renderLibrary(currentDimension, currentTab); }
 function deleteItem(dimension, tab, index, frequency) { if (confirm(getTranslation('confirm_delete'))) { if (tab === "routines") { dimensionLibraryData[dimension].routines[frequency].splice(index, 1); } else { dimensionLibraryData[dimension][tab].splice(index, 1); } saveToLocalStorage(); renderLibrary(dimension, tab); } }
 
-/**
- * REFACTORED: Renders the item detail page based on a context object.
- */
 function renderItemDetailPage(context) {
     const { dimension, tab, index, frequency, originPage } = context;
 
@@ -1275,44 +1256,31 @@ function saveItemDetail() {
  * * IMAGE UPLOADING & CRUD (RESOURCES & FINANCIALS)
  * *****************************************************************/
 
-// This helper function calls our Netlify Function
 async function uploadImage(base64File) {
-    // Show a loading indicator to the user
     document.body.style.cursor = 'wait';
-
     try {
         const response = await fetch('/.netlify/functions/upload-image', {
             method: 'POST',
             body: JSON.stringify({ file: base64File }),
         });
-
-        // If the response is not OK, we'll try to get a useful error message
         if (!response.ok) {
-            // To solve the "body already consumed" error, we CLONE the response.
-            // We can read the body of the clone, leaving the original response body available.
             const responseClone = response.clone();
             let errorMsg = `Image upload failed with status: ${response.status}`;
-            
             try {
-                // Try to parse a JSON error from the cloned response
                 const err = await responseClone.json();
                 errorMsg = err.error || JSON.stringify(err);
             } catch (e) {
-                // If the error response wasn't JSON, get the raw text from the original response
                 errorMsg = await response.text();
             }
             throw new Error(errorMsg);
         }
-
         const { secure_url } = await response.json();
         return secure_url;
     } catch (error) {
-        // The alert will now show the true, underlying error message!
         console.error("Full upload error:", error);
         alert(`Error: ${error.message}`);
         return null;
     } finally {
-        // Hide the loading indicator
         document.body.style.cursor = 'default';
     }
 }
@@ -1351,9 +1319,7 @@ function openResourceModal(resourceId = null, category = null) {
 }
 function closeResourceModal() { document.getElementById('resourceModal').style.display = 'none'; }
 function saveResource() {
-    // The image URL is already on the preview element's src
     const imagePreview = document.getElementById('resourceImagePreview');
-
     const resourceData = {
         name: document.getElementById('resourceNameInput').value,
         category: document.getElementById('resourceCategoryInput').value,
@@ -1401,12 +1367,9 @@ function previewResourceImage(event) {
     const reader = new FileReader();
     reader.onload = async function(e) {
         const base64 = e.target.result;
-        // Show a temporary preview
         document.getElementById('resourceImagePreview').src = base64;
-        // Upload and get the permanent URL
         const finalUrl = await uploadImage(base64);
         if (finalUrl) {
-            // Update the preview src to the permanent URL
             document.getElementById('resourceImagePreview').src = finalUrl;
         }
     };
@@ -1496,13 +1459,11 @@ function getColor(value) { if (value >= 70) return "rgb(76, 175, 80)"; if (value
 /*****************************************************************
  * * LOCAL STORAGE & DATA MIGRATION
  * *****************************************************************/
-function saveToLocalStorage() {
-    // This function is now much simpler! It just saves the whole object.
-    // The image data is now stored as simple URLs from Cloudinary.
+function saveToLocalStorage(showAlert = true) {
     const allData = {
         dimensionScores: dimensions.reduce((acc, dim) => ({ ...acc, [dim.name]: { score: parseFloat(inputs[dim.name].value) || 0 } }), {}),
         libraryData: dimensionLibraryData,
-        visualizationData: [], // This will be rebuilt below
+        visualizationData: [],
     };
 
     const visArtboard = document.getElementById('visArtboard');
@@ -1511,7 +1472,7 @@ function saveToLocalStorage() {
             const img = container.querySelector('img');
             if (img && img.src) {
                 allData.visualizationData.push({
-                    src: img.src, // This is now a Cloudinary URL
+                    src: img.src,
                     left: container.style.left,
                     top: container.style.top,
                     width: container.style.width,
@@ -1522,13 +1483,12 @@ function saveToLocalStorage() {
     }
 
     localStorage.setItem("lifeQualityAppData", JSON.stringify(allData));
-    console.log("Data saved!");
-    alert("Your data has been saved!");
+    if (showAlert) {
+        console.log("Data saved!");
+        alert("Your data has been saved!");
+    }
 }
 
-/**
- * A helper function to clean up old data where role names were saved instead of keys.
- */
 function migrateRoleData(data) {
     if (!data.libraryData?.appSettings?.userRoles) return;
 
@@ -1569,7 +1529,6 @@ function loadFromLocalStorage() {
 
     const parsed = JSON.parse(data);
 
-    // This function is kept for backwards compatibility if old data exists
     migrateRoleData(parsed);
 
     if(parsed.dimensionScores) {
@@ -1600,10 +1559,9 @@ function loadFromLocalStorage() {
 
     const visArtboard = document.getElementById('visArtboard');
     if (visArtboard) {
-        visArtboard.innerHTML = ''; // Clear any existing images
+        visArtboard.innerHTML = '';
         if (parsed.visualizationData && Array.isArray(parsed.visualizationData)) {
             parsed.visualizationData.forEach(imgData => {
-                // The src is now a URL, so we can use it directly
                 addImageToArtboard(imgData.src, imgData);
             });
         }
@@ -1622,7 +1580,6 @@ function openProfileModal() {
 function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
 function saveProfile() {
     dimensionLibraryData.appSettings.userName = document.getElementById('profileNameInput').value;
-    // The image src is already the permanent Cloudinary URL
     dimensionLibraryData.appSettings.userImage = document.getElementById('profileImagePreview').src;
     updateUserProfileDisplay();
     saveToLocalStorage();
@@ -1635,17 +1592,10 @@ function previewProfileImage(event) {
     const reader = new FileReader();
     reader.onload = async function(e) {
         const base64 = e.target.result;
-        // Show a temporary local preview for responsiveness
         document.getElementById('profileImagePreview').src = base64;
-
-        // Upload to get the permanent URL
         const finalUrl = await uploadImage(base64);
         if (finalUrl) {
-            // Now update the src to the permanent URL from Cloudinary
             document.getElementById('profileImagePreview').src = finalUrl;
-        } else {
-           // Handle upload failure, maybe revert to a default image
-           // For now, we'll just leave the local preview
         }
     };
     reader.readAsDataURL(file);
@@ -1656,7 +1606,6 @@ function previewProfileImage(event) {
  * * LIFE VISUALIZATION PAGE LOGIC
  * *****************************************************************/
 
-// This is defined outside the function so it can be accessed by loadFromLocalStorage
 let addImageToArtboard = () => {};
 
 function setupVisualizationPage() {
@@ -1669,7 +1618,6 @@ function setupVisualizationPage() {
         return;
     }
 
-    // --- State Management ---
     let scale = 0.3;
     let panX = 50;
     let panY = 50;
@@ -1678,11 +1626,6 @@ function setupVisualizationPage() {
     let panStart = { x: 0, y: 0 };
     let currentlySelected = null;
 
-    // --- Core Functions ---
-
-    /**
-     * Applies transforms and updates the dynamic grid.
-     */
     function applyTransform() {
         artboard.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
         const gridSize = 100 * scale;
@@ -1690,9 +1633,6 @@ function setupVisualizationPage() {
         viewport.style.backgroundPosition = `${panX % gridSize}px ${panY % gridSize}px`;
     }
 
-    /**
-     * Deselects any currently selected image.
-     */
     function deselectAll() {
         if (currentlySelected) {
             currentlySelected.classList.remove('selected');
@@ -1700,9 +1640,6 @@ function setupVisualizationPage() {
         }
     }
 
-    /**
-     * Handles zooming with Ctrl + Mouse Wheel.
-     */
     function handleZoom(event) {
         if (!event.ctrlKey) return;
         event.preventDefault();
@@ -1717,11 +1654,6 @@ function setupVisualizationPage() {
         applyTransform();
     }
 
-    /**
-     * MODIFIED: Now accepts an optional 'savedData' object to recreate images from storage.
-     * @param {string} src - The image source (could be a local preview or a Cloudinary URL).
-     * @param {object|null} savedData - Object containing position and size data.
-     */
     addImageToArtboard = (src, savedData = null) => {
         const container = document.createElement('div');
         container.className = 'image-container';
@@ -1730,7 +1662,6 @@ function setupVisualizationPage() {
         img.src = src;
         img.className = 'visualization-image';
 
-        // Add the handles
         container.innerHTML += `
             <div class="resize-handle top-left"></div>
             <div class="resize-handle top-right"></div>
@@ -1739,7 +1670,6 @@ function setupVisualizationPage() {
         `;
         container.prepend(img);
 
-        // --- Deletion Logic ---
         container.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -1747,21 +1677,17 @@ function setupVisualizationPage() {
             showContextMenu(e.target, menuActions);
         });
 
-        // --- State variables for this specific image ---
         let isDragging = false;
 
-        // --- Combined Dragging and Selection Logic ---
         img.addEventListener('mousedown', (e) => {
-            if (e.button !== 0) return; // Only for left-click
+            if (e.button !== 0) return;
             e.preventDefault();
             e.stopPropagation();
 
-            // Select the image
             deselectAll();
             container.classList.add('selected');
             currentlySelected = container;
 
-            // Start dragging
             isDragging = true;
             container.classList.add('dragging');
             const originalPos = { x: parseFloat(container.style.left) || 0, y: parseFloat(container.style.top) || 0 };
@@ -1786,11 +1712,10 @@ function setupVisualizationPage() {
             window.addEventListener('mouseup', onMouseUp);
         });
 
-        // --- Resizing Logic ---
         container.querySelectorAll('.resize-handle').forEach(handle => {
             handle.addEventListener('mousedown', (e) => {
                 e.preventDefault();
-                e.stopPropagation(); // Stop the drag event from firing
+                e.stopPropagation();
 
                 let isResizing = true;
                 container.classList.add('resizing');
@@ -1846,15 +1771,12 @@ function setupVisualizationPage() {
             });
         });
 
-        // --- Initial Position & Size ---
         if (savedData) {
-            // Load from saved data
             container.style.width = savedData.width;
             container.style.height = savedData.height;
             container.style.left = savedData.left;
             container.style.top = savedData.top;
         } else {
-            // Set default size for new images
             img.onload = () => {
                  const defaultWidth = 350;
                  const aspectRatio = img.naturalWidth / img.naturalHeight;
@@ -1875,7 +1797,6 @@ function setupVisualizationPage() {
         artboard.appendChild(container);
     }
 
-    // --- Event Listeners Setup ---
     viewport.addEventListener('mousedown', (e) => {
         if (e.target === viewport || e.target === artboard) {
             deselectAll();
@@ -1908,13 +1829,11 @@ function setupVisualizationPage() {
     viewport.addEventListener('wheel', handleZoom, { passive: false });
 
     window.addEventListener('keydown', (e) => {
-        // First, check if the user is typing in an input field.
         const activeEl = document.activeElement;
         const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
         
-        // Only prevent the default action if the spacebar is pressed AND an input is NOT focused.
         if (e.code === 'Space' && !isInputFocused) {
-            e.preventDefault(); // Stop the page from scrolling
+            e.preventDefault();
             if (!isSpacePressed) {
                 isSpacePressed = true;
                 viewport.style.cursor = 'grab';
@@ -1936,12 +1855,9 @@ function setupVisualizationPage() {
             const reader = new FileReader();
             reader.onload = async (e) => {
                 const base64 = e.target.result;
-                // Add to artboard immediately with local preview
                 addImageToArtboard(base64);
-                // Upload and replace src with permanent URL
                 const finalUrl = await uploadImage(base64);
                 if (finalUrl) {
-                    // Find the last image added and update its src
                     const lastImage = artboard.querySelector('.image-container:last-child img');
                     if (lastImage) {
                         lastImage.src = finalUrl;
@@ -1953,6 +1869,5 @@ function setupVisualizationPage() {
         }
     });
 
-    // --- Initial Setup ---
     applyTransform();
 }

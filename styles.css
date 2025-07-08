@@ -823,3 +823,62 @@ input:checked + .slider:before { transform: translateX(26px); }
     border-radius: 10px;
     font-weight: 500;
 }
+
+/* Container for the compliance toggle on a library card */
+.compliance-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.compliance-toggle-container .toggle-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Re-using the toggle switch from the options modal, but making it smaller */
+.compliance-toggle-container .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px; /* Smaller width */
+    height: 24px; /* Smaller height */
+}
+
+.compliance-toggle-container .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.compliance-toggle-container .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-tertiary);
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.compliance-toggle-container .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px; /* Smaller handle */
+    width: 18px;  /* Smaller handle */
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--toggle-handle-color);
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.compliance-toggle-container input:checked + .slider {
+    background-color: var(--accent-secondary); /* Green for 'done' */
+}
+
+.compliance-toggle-container input:checked + .slider:before {
+    transform: translateX(20px); /* Adjusted for smaller size */
+}
