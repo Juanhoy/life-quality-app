@@ -88,11 +88,8 @@ document.addEventListener("DOMContentLoaded", () => {
     setupManageRolesPage();
 
     document.getElementById("saveDataBtn").addEventListener("click", saveToLocalStorage);
-    document.getElementById("loadDataBtn").addEventListener("click", () => {
-        if(confirm(getTranslation("confirm_load"))) {
-            loadFromLocalStorage(true);
-        }
-    });
+    
+    // The "Load Data" button listener is now removed.
 
     document.getElementById("profileBtn").addEventListener("click", openProfileModal);
     document.getElementById("saveProfileBtn").addEventListener("click", saveProfile);
@@ -221,7 +218,7 @@ function updateChartColors(){
 const translations = {
     en: {
         nav_life_visualization: "Life Visualization", nav_life_balance: "Life Balance", nav_life_roles: "Life Roles", nav_life_skills: "Life Skills", nav_life_resources: "Life Resources", nav_options: "Options",
-        btn_save_data: "Save Data", btn_load_data: "Load Data", btn_add: "Add", btn_done: "Done", btn_manage_roles: "Manage Roles", btn_upload_image: "Upload Image",
+        btn_save_data: "Save Data", btn_donate: "Donate", btn_add: "Add", btn_done: "Done", btn_manage_roles: "Manage Roles", btn_upload_image: "Upload Image",
         btn_save: "Save", btn_delete: "Delete", btn_cancel: "Cancel", btn_add_item: "Add Item", btn_add_skill: "Add Skill",
         title_life_quality: "Life Quality", title_manage_roles: "Manage Roles", title_available_roles: "Available Roles", title_active_roles: "Your Active Roles",
         title_edit_profile: "Edit Profile", title_edit_resource: "Edit Resource", title_add_new_resource: "Add New Resource", title_edit: "Edit", title_add_new: "Add New",
@@ -229,11 +226,12 @@ const translations = {
         tab_challenges: "Challenges", tab_goals: "Goals", tab_projects: "Projects", tab_routines: "Routines",
         subtitle_daily: "Daily", subtitle_weekly: "Weekly", subtitle_monthly: "Monthly",
         ph_add_challenge: "Add a new challenge...", ph_goal_name: "Goal name...", ph_status_done: "% done", ph_project_name: "Project name...", ph_routine_name: "Routine name...",
-        ph_search_roles: "Search roles...", ph_create_custom_role: "Create custom role...",
+        ph_search_roles: "Search roles...", ph_create_custom_role: "Create custom role...", ph_life_roles: "Life Roles", ph_associated_skills: "Associated Skills", ph_importance: "Importance", ph_select_goal: "Select Goal",
         label_name: "Name", label_category: "Category", label_description: "Description", label_value: "Value ($)", label_purchase_date: "Purchase Date",
         label_amount: "Amount ($)", label_date: "Date", label_color_theme: "Color Theme", label_language: "Language",
         label_status: "Status", label_importance: "Importance", label_due_date: "Due", label_compliance: "Done Today", yes: "Yes", no: "No",
         label_skill_name: "Skill Name", label_knowledge_level: "Knowledge Level (%)", label_xp_level: "XP Level (%)",
+        importance_high: "High", importance_medium: "Medium", importance_low: "Low",
         health: "Health", family: "Family", freedom: "Freedom", community: "Community", management: "Management", learning: "Learning", creation: "Creation", fun: "Fun",
         money: "Money", total_net_worth: "Total Net Worth", incomes: "Incomes", expenses: "Expenses", savings: "Savings", investments: "Investments", debts: "Debts",
         btn_add_income: "Add Income", btn_add_expense: "Add Expense", btn_add_saving: "Add Saving", btn_add_investment: "Add Investment", btn_add_debt: "Add Debt",
@@ -251,7 +249,7 @@ const translations = {
     },
     es: {
         nav_life_visualization: "Visualización", nav_life_balance: "Balance de Vida", nav_life_roles: "Roles de Vida", nav_life_skills: "Habilidades de Vida", nav_life_resources: "Recursos de Vida", nav_options: "Opciones",
-        btn_save_data: "Guardar Datos", btn_load_data: "Cargar Datos", btn_add: "Añadir", btn_done: "Hecho", btn_manage_roles: "Gestionar Roles", btn_upload_image: "Subir Imagen",
+        btn_save_data: "Guardar Datos", btn_donate: "Donar", btn_add: "Añadir", btn_done: "Hecho", btn_manage_roles: "Gestionar Roles", btn_upload_image: "Subir Imagen",
         btn_save: "Guardar", btn_delete: "Eliminar", btn_cancel: "Cancelar", btn_add_item: "Añadir Objeto", btn_add_skill: "Añadir Habilidad",
         title_life_quality: "Calidad de Vida", title_manage_roles: "Gestionar Roles", title_available_roles: "Roles Disponibles", title_active_roles: "Tus Roles Activos",
         title_edit_profile: "Editar Perfil", title_edit_resource: "Editar Recurso", title_add_new_resource: "Añadir Nuevo Recurso", title_edit: "Editar", title_add_new: "Añadir Nuevo",
@@ -259,11 +257,12 @@ const translations = {
         tab_challenges: "Retos", tab_goals: "Metas", tab_projects: "Proyectos", tab_routines: "Rutinas",
         subtitle_daily: "Diarias", subtitle_weekly: "Semanales", subtitle_monthly: "Mensuales",
         ph_add_challenge: "Añadir un nuevo reto...", ph_goal_name: "Nombre de la meta...", ph_status_done: "% completado", ph_project_name: "Nombre del proyecto...", ph_routine_name: "Nombre de la rutina...",
-        ph_search_roles: "Buscar roles...", ph_create_custom_role: "Crear rol personalizado...",
+        ph_search_roles: "Buscar roles...", ph_create_custom_role: "Crear rol personalizado...", ph_life_roles: "Roles de Vida", ph_associated_skills: "Habilidades Asociadas", ph_importance: "Importancia", ph_select_goal: "Seleccionar Meta",
         label_name: "Nombre", label_category: "Categoría", label_description: "Descripción", label_value: "Valor ($)", label_purchase_date: "Fecha de Compra",
         label_amount: "Monto ($)", label_date: "Fecha", label_color_theme: "Tema de Color", label_language: "Idioma",
         label_status: "Estado", label_importance: "Importancia", label_due_date: "Vence", label_compliance: "Hecho Hoy", yes: "Sí", no: "No",
         label_skill_name: "Nombre de Habilidad", label_knowledge_level: "Nivel de Conocimiento (%)", label_xp_level: "Nivel de XP (%)",
+        importance_high: "Alta", importance_medium: "Media", importance_low: "Baja",
         health: "Salud", family: "Familia", freedom: "Libertad", community: "Comunidad", management: "Gestión", learning: "Aprendizaje", creation: "Creación", fun: "Diversión",
         money: "Dinero", total_net_worth: "Patrimonio Neto Total", incomes: "Ingresos", expenses: "Gastos", savings: "Ahorros", investments: "Inversiones", debts: "Deudas",
         btn_add_income: "Añadir Ingreso", btn_add_expense: "Añadir Gasto", btn_add_saving: "Añadir Ahorro", btn_add_investment: "Añadir Inversión", btn_add_debt: "Añadir Deuda",
@@ -438,7 +437,7 @@ function renderLibrary(dimension, tab) {
         let detailsHtml = '';
 
         if (item.status !== undefined) detailsHtml += `<span>${getTranslation('label_status')}: ${item.status}%</span>`;
-        if (item.importance) detailsHtml += `<span>${getTranslation('label_importance')}: ${item.importance}</span>`;
+        if (item.importance) detailsHtml += `<span>${getTranslation('label_importance')}: ${getTranslation('importance_' + item.importance.toLowerCase())}</span>`;
         if (item.dueDate) detailsHtml += `<span>${getTranslation('label_due_date')}: ${item.dueDate || "N/A"}</span>`;
         
         let complianceHtml = '';
@@ -459,12 +458,10 @@ function renderLibrary(dimension, tab) {
 
         const context = { dimension, tab: type + 's', index, frequency, originPage: 'lifeBalancePage' };
         
-        // Main card click listener
         div.addEventListener('click', () => {
             showPage('itemDetailPage', context);
         });
 
-        // Event listener for the toggle's container to block clicks
         const toggleContainer = div.querySelector('.compliance-toggle-container');
         if (toggleContainer) {
             toggleContainer.addEventListener('click', (e) => {
@@ -472,14 +469,12 @@ function renderLibrary(dimension, tab) {
             });
         }
 
-        // Event listener for the toggle's functionality
         const complianceToggle = div.querySelector('.compliance-toggle-container input');
         if (complianceToggle) {
-            complianceToggle.addEventListener('change', (e) => {
-                // No need to stop propagation on 'change' if the container 'click' is already stopped
+            complianceToggle.addEventListener('change', () => {
                 const routine = dimensionLibraryData[dimension].routines[frequency][index];
-                routine.compliance = e.target.checked;
-                saveToLocalStorage(false); // Save without showing alert
+                routine.compliance = !routine.compliance;
+                saveToLocalStorage(false);
             });
         }
 
@@ -801,7 +796,7 @@ function createSkillCard(role, skills) {
                 <li class="skill-item" data-skill-index="${skill.originalIndex}">
                     <div>${skill.name}</div>
                     <div class="skill-details">
-                        <span>${getTranslation('label_importance')}: ${skill.importance}</span>
+                        <span>${getTranslation('label_importance')}: ${getTranslation('importance_' + skill.importance.toLowerCase())}</span>
                         <span>${getTranslation('label_knowledge_level')}: ${skill.knowledgeLevel}%</span>
                         <span>${getTranslation('label_xp_level')}: ${skill.xpLevel}%</span>
                     </div>
@@ -1090,18 +1085,22 @@ function initializeAllCustomSelects() {
     }));
 
     document.querySelectorAll('[id*="RolesContainer"]').forEach(container => {
-        createCustomSelect(container, roleOptions, { placeholder: 'Life Roles', isMultiSelect: true });
+        createCustomSelect(container, roleOptions, { placeholder: getTranslation('ph_life_roles'), isMultiSelect: true });
     });
 
-    const importanceOptions = [ { value: 'High', text: 'High' }, { value: 'Medium', text: 'Medium' }, { value: 'Low', text: 'Low' } ];
+    const importanceOptions = [ 
+        { value: 'High', text: getTranslation('importance_high') }, 
+        { value: 'Medium', text: getTranslation('importance_medium') }, 
+        { value: 'Low', text: getTranslation('importance_low') } 
+    ];
     document.querySelectorAll('[id*="ImportanceContainer"]').forEach(container => {
-        createCustomSelect(container, importanceOptions, { placeholder: 'Importance', initialValue: 'Medium' });
+        createCustomSelect(container, importanceOptions, { placeholder: getTranslation('ph_importance'), initialValue: 'Medium' });
     });
 
     const goals = dimensionLibraryData[currentDimension]?.goals || [];
-    const goalOptions = [{ value: '', text: 'Select Goal' }, ...goals.map((g, idx) => ({ value: idx.toString(), text: g.name }))];
+    const goalOptions = [{ value: '', text: getTranslation('ph_select_goal') }, ...goals.map((g, idx) => ({ value: idx.toString(), text: g.name }))];
     document.querySelectorAll('[id*="GoalContainer"]').forEach(container => {
-        createCustomSelect(container, goalOptions, { placeholder: 'Select Goal', initialValue: '' });
+        createCustomSelect(container, goalOptions, { placeholder: getTranslation('ph_select_goal'), initialValue: '' });
     });
 
     const skillOptions = (dimensionLibraryData.skills || []).map((skill, index) => ({
@@ -1109,7 +1108,7 @@ function initializeAllCustomSelects() {
         text: skill.name
     }));
     document.querySelectorAll('[id*="SkillsContainer"]').forEach(container => {
-        createCustomSelect(container, skillOptions, { placeholder: 'Associated Skills', isMultiSelect: true });
+        createCustomSelect(container, skillOptions, { placeholder: getTranslation('ph_associated_skills'), isMultiSelect: true });
     });
 }
 function buildDimensionInputs() { dimensions.forEach(dim => { const container = document.createElement("div"); container.className = "dimension-input"; container.dataset.dimension = dim.name; container.innerHTML = `<span class="dimension-name">${dim.name}</span><input class="dimension-score" type="number" value="0" min="0" max="100" data-name="${dim.name}" placeholder="0%">`; inputsDiv.appendChild(container); inputs[dim.name] = container.querySelector('input'); inputs[dim.name].addEventListener("input", updateLifeQuality); }); }
@@ -1176,10 +1175,10 @@ function renderItemDetailPage(context) {
         formHtml += `<label><span>${getTranslation('label_importance')}</span><div class="custom-select-container" id="detailImportanceContainer"></div></label>`;
     }
     if (item.lifeRoles !== undefined) {
-        formHtml += `<label><span>Life Roles</span><div class="custom-select-container" id="detailLifeRolesContainer"></div></label>`;
+        formHtml += `<label><span>${getTranslation('ph_life_roles')}</span><div class="custom-select-container" id="detailLifeRolesContainer"></div></label>`;
     }
     if (item.associatedSkills !== undefined) {
-        formHtml += `<label><span>Associated Skills</span><div class="custom-select-container" id="detailSkillsContainer"></div></label>`;
+        formHtml += `<label><span>${getTranslation('ph_associated_skills')}</span><div class="custom-select-container" id="detailSkillsContainer"></div></label>`;
     }
     if (item.compliance !== undefined) {
         formHtml += `<label><span>${getTranslation('label_compliance')}</span><div class="custom-select-container" id="detailComplianceContainer"></div></label>`;
@@ -1195,20 +1194,20 @@ function renderItemDetailPage(context) {
     };
 
     if (item.importance !== undefined) {
-        const importanceOptions = [ { value: 'High', text: 'High' }, { value: 'Medium', text: 'Medium' }, { value: 'Low', text: 'Low' } ];
-        createCustomSelect(document.getElementById('detailImportanceContainer'), importanceOptions, { placeholder: 'Importance', initialValue: item.importance });
+        const importanceOptions = [ { value: 'High', text: getTranslation('importance_high') }, { value: 'Medium', text: getTranslation('importance_medium') }, { value: 'Low', text: getTranslation('importance_low') } ];
+        createCustomSelect(document.getElementById('detailImportanceContainer'), importanceOptions, { placeholder: getTranslation('ph_importance'), initialValue: item.importance });
     }
     if (item.lifeRoles !== undefined) {
         const roleOptions = dimensionLibraryData.appSettings.userRoles.map(r => ({ value: r.key, text: getTranslation(r.key) }));
-        createCustomSelect(document.getElementById('detailLifeRolesContainer'), roleOptions, { placeholder: 'Life Roles', isMultiSelect: true, initialValue: item.lifeRoles });
+        createCustomSelect(document.getElementById('detailLifeRolesContainer'), roleOptions, { placeholder: getTranslation('ph_life_roles'), isMultiSelect: true, initialValue: item.lifeRoles });
     }
     if (item.associatedSkills !== undefined) {
         const skillOptions = (dimensionLibraryData.skills || []).map((skill, index) => ({ value: index.toString(), text: skill.name }));
-        createCustomSelect(document.getElementById('detailSkillsContainer'), skillOptions, { placeholder: 'Associated Skills', isMultiSelect: true, initialValue: item.associatedSkills });
+        createCustomSelect(document.getElementById('detailSkillsContainer'), skillOptions, { placeholder: getTranslation('ph_associated_skills'), isMultiSelect: true, initialValue: item.associatedSkills });
     }
     if (item.compliance !== undefined) {
         const complianceOptions = [ { value: 'true', text: getTranslation('yes') }, { value: 'false', text: getTranslation('no') } ];
-        createCustomSelect(document.getElementById('detailComplianceContainer'), complianceOptions, { placeholder: 'Compliance', initialValue: String(item.compliance) });
+        createCustomSelect(document.getElementById('detailComplianceContainer'), complianceOptions, { placeholder: getTranslation('label_compliance'), initialValue: String(item.compliance) });
     }
 }
 
