@@ -6,6 +6,8 @@
 // Default state
 let currentDimension = "Health";
 let currentTab = "goals";
+let lifeRolesGlobalFilter = 'all'; // New global filter for Life Roles page
+let todayPageSelectedDate = new Date(); // New state for Today page calendar
 let roleCardState = {};
 let editingResourceId = null;
 let currentPageOrigin = 'lifeBalancePage';
@@ -161,6 +163,7 @@ function showPage(pageId, context = {}) {
     if(targetPage) targetPage.style.display = "block";
 
     switch (pageId) {
+        case 'todayPage': renderTodayPage(); break;
         case 'lifeRolesPage': renderLifeRolesPage(); break;
         case 'lifeSkillsPage': renderLifeSkillsPage(); break;
         case 'lifeResourcesPage': renderLifeResourcesPage(); break;
@@ -232,13 +235,13 @@ function updateChartColors(){
  * *****************************************************************/
 const translations = {
     en: {
-        nav_life_visualization: "Life Visualization", nav_life_balance: "Life Balance", nav_life_roles: "Life Roles", nav_life_skills: "Life Skills", nav_life_resources: "Life Resources", nav_options: "Options",
+        nav_life_visualization: "Life Visualization", nav_life_balance: "Life Balance", nav_life_roles: "Life Roles", nav_life_skills: "Life Skills", nav_life_resources: "Life Resources", nav_options: "Options", nav_today: "Today",
         btn_save_data: "Save Data", btn_donate: "Donate", btn_add: "Add", btn_done: "Done", btn_manage_roles: "Manage Roles", btn_upload_image: "Upload Image",
         btn_save: "Save", btn_delete: "Delete", btn_cancel: "Cancel", btn_add_item: "Add Item", btn_add_skill: "Add Skill",
         title_life_quality: "Life Quality", title_manage_roles: "Manage Roles", title_available_roles: "Available Roles", title_active_roles: "Your Active Roles",
         title_edit_profile: "Edit Profile", title_edit_resource: "Edit Resource", title_add_new_resource: "Add New Resource", title_edit: "Edit", title_add_new: "Add New",
-        title_life_skills: "Life Skills", title_add_new_skill: "Add New Skill", title_edit_skill: "Edit Skill",
-        tab_challenges: "Challenges", tab_goals: "Goals", tab_projects: "Projects", tab_routines: "Routines",
+        title_life_skills: "Life Skills", title_add_new_skill: "Add New Skill", title_edit_skill: "Edit Skill", title_today_page: "Today's Focus",
+        tab_challenges: "Challenges", tab_goals: "Goals", tab_projects: "Projects", tab_routines: "Routines", tab_all: "All",
         subtitle_daily: "Daily", subtitle_weekly: "Weekly", subtitle_monthly: "Monthly",
         ph_add_challenge: "Add a new challenge...", ph_goal_name: "Goal name...", ph_status_done: "% done", ph_project_name: "Project name...", ph_routine_name: "Routine name...",
         ph_search_roles: "Search roles...", ph_create_custom_role: "Create custom role...", ph_life_roles: "Life Roles", ph_associated_skills: "Associated Skills", ph_importance: "Importance", ph_select_goal: "Select Goal",
@@ -264,15 +267,16 @@ const translations = {
         wishlist: "Wishlist", btn_add_wish: "Add to Wishlist", title_wishlist: "Life Wishlist", title_add_new_wish: "Add New Wish", title_edit_wish: "Edit Wish",
         no_wishes_role: "No wishes for this role yet.", label_wish_category: "Category", label_estimated_cost: "Est. Cost ($)", wish_cat_object: "Object", wish_cat_travel: "Travel", wish_cat_course: "Course",
         primary_missions: "Primary Missions", secondary_missions: "Secondary Missions", btn_add_mission: "Add Mission", title_add_mission: "Add Mission", title_edit_mission: "Edit Mission", label_mission_name: "Mission Name", label_completion_date: "Completion Date",
+        today_daily_routines: "Daily Routines", today_primary_missions: "Primary Missions for Today", today_secondary_missions: "Secondary Missions for Today", no_routines_today: "No daily routines found.", no_missions_today: "No missions scheduled for today.",
     },
     es: {
-        nav_life_visualization: "Visualización", nav_life_balance: "Balance de Vida", nav_life_roles: "Roles de Vida", nav_life_skills: "Habilidades de Vida", nav_life_resources: "Recursos de Vida", nav_options: "Opciones",
+        nav_life_visualization: "Visualización", nav_life_balance: "Balance de Vida", nav_life_roles: "Roles de Vida", nav_life_skills: "Habilidades de Vida", nav_life_resources: "Recursos de Vida", nav_options: "Opciones", nav_today: "Hoy",
         btn_save_data: "Guardar Datos", btn_donate: "Donar", btn_add: "Añadir", btn_done: "Hecho", btn_manage_roles: "Gestionar Roles", btn_upload_image: "Subir Imagen",
         btn_save: "Guardar", btn_delete: "Eliminar", btn_cancel: "Cancelar", btn_add_item: "Añadir Objeto", btn_add_skill: "Añadir Habilidad",
         title_life_quality: "Calidad de Vida", title_manage_roles: "Gestionar Roles", title_available_roles: "Roles Disponibles", title_active_roles: "Tus Roles Activos",
         title_edit_profile: "Editar Perfil", title_edit_resource: "Editar Recurso", title_add_new_resource: "Añadir Nuevo Recurso", title_edit: "Editar", title_add_new: "Añadir Nuevo",
-        title_life_skills: "Habilidades de Vida", title_add_new_skill: "Añadir Nueva Habilidad", title_edit_skill: "Editar Habilidad",
-        tab_challenges: "Retos", tab_goals: "Metas", tab_projects: "Proyectos", tab_routines: "Rutinas",
+        title_life_skills: "Habilidades de Vida", title_add_new_skill: "Añadir Nueva Habilidad", title_edit_skill: "Editar Habilidad", title_today_page: "Enfoque de Hoy",
+        tab_challenges: "Retos", tab_goals: "Metas", tab_projects: "Proyectos", tab_routines: "Rutinas", tab_all: "Todos",
         subtitle_daily: "Diarias", subtitle_weekly: "Semanales", subtitle_monthly: "Mensuales",
         ph_add_challenge: "Añadir un nuevo reto...", ph_goal_name: "Nombre de la meta...", ph_status_done: "% completado", ph_project_name: "Nombre del proyecto...", ph_routine_name: "Nombre de la rutina...",
         ph_search_roles: "Buscar roles...", ph_create_custom_role: "Crear rol personalizado...", ph_life_roles: "Roles de Vida", ph_associated_skills: "Habilidades Asociadas", ph_importance: "Importancia", ph_select_goal: "Seleccionar Meta",
@@ -298,6 +302,7 @@ const translations = {
         wishlist: "Lista de Deseos", btn_add_wish: "Añadir a Lista", title_wishlist: "Lista de Deseos de Vida", title_add_new_wish: "Añadir Nuevo Deseo", title_edit_wish: "Editar Deseo",
         no_wishes_role: "Aún no hay deseos para este rol.", label_wish_category: "Categoría", label_estimated_cost: "Costo Est. ($)", wish_cat_object: "Objeto", wish_cat_travel: "Viaje", wish_cat_course: "Curso",
         primary_missions: "Misiones Primarias", secondary_missions: "Misiones Secundarias", btn_add_mission: "Añadir Misión", title_add_mission: "Añadir Misión", title_edit_mission: "Editar Misión", label_mission_name: "Nombre de la Misión", label_completion_date: "Fecha de Finalización",
+        today_daily_routines: "Rutinas Diarias", today_primary_missions: "Misiones Primarias para Hoy", today_secondary_missions: "Misiones Secundarias para Hoy", no_routines_today: "No se encontraron rutinas diarias.", no_missions_today: "No hay misiones programadas para hoy.",
     }
 };
 
@@ -675,7 +680,33 @@ function filterRoleLibrary() {
 
 function renderLifeRolesPage() {
     const contentDiv = document.getElementById("lifeRolesContent");
-    if (!contentDiv) return;
+    const pageContainer = document.getElementById("lifeRolesPage");
+    if (!contentDiv || !pageContainer) return;
+
+    // Remove old filter bar to prevent duplication on re-render
+    const oldFilterBar = document.getElementById('lifeRolesFilterBar');
+    if (oldFilterBar) oldFilterBar.remove();
+
+    // Create and insert the new global filter bar
+    const filterBar = document.createElement('div');
+    filterBar.id = 'lifeRolesFilterBar';
+    filterBar.className = 'global-filter-bar';
+    const filters = ['all', 'challenge', 'goal', 'project', 'routine'];
+    const filterLabels = {'all': 'tab_all', 'challenge': 'tab_challenges', 'goal': 'tab_goals', 'project': 'tab_projects', 'routine': 'tab_routines' };
+    
+    filterBar.innerHTML = filters.map(f =>
+        `<button class="btn ${lifeRolesGlobalFilter === f ? 'primary-btn' : 'secondary-btn'}" data-filter="${f}" data-i18n="${filterLabels[f]}"></button>`
+    ).join('');
+    pageContainer.querySelector('.page-header').insertAdjacentElement('afterend', filterBar);
+    applyTranslations(filterBar);
+
+    // Add event listeners to the new filter buttons
+    filterBar.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            lifeRolesGlobalFilter = btn.dataset.filter;
+            renderLifeRolesPage(); // Re-render the page with the new global filter
+        });
+    });
 
     contentDiv.innerHTML = '';
     const { userRoles } = dimensionLibraryData.appSettings;
@@ -690,6 +721,11 @@ function renderLifeRolesPage() {
         const dim = dimensionLibraryData[dimName];
 
         const processItem = (item, index, category, tab, frequency) => {
+            // Apply the global filter first
+            if (lifeRolesGlobalFilter !== 'all' && category !== lifeRolesGlobalFilter) {
+                return; // Skip item if it doesn't match
+            }
+
             if (item.lifeRoles && Array.isArray(item.lifeRoles)) {
                 item.lifeRoles.forEach(roleKey => {
                     if (itemsByRole[roleKey]) {
@@ -730,10 +766,12 @@ function createRoleCard(role, itemsForRole) {
 
     let processedItems = [...itemsForRole];
 
+    // Per-card filter
     if (state.filter !== 'all') {
         processedItems = processedItems.filter(item => item.category === state.filter);
     }
 
+    // Per-card sort
     const importanceMap = { High: 3, Medium: 2, Low: 1, default: 0 };
     if (state.sort === 'dueDate') {
         processedItems.sort((a, b) => (new Date(a.dueDate) || 0) - (new Date(b.dueDate) || 0));
@@ -2515,3 +2553,211 @@ function deleteMission(missionType, missionId) {
         renderItemDetailPage(editingItem);
     }
 }
+
+/*****************************************************************
+ * * TODAY PAGE LOGIC
+ * *****************************************************************/
+
+function renderTodayPage() {
+    const page = document.getElementById('todayPage');
+    if (!page) return;
+
+    todayPageSelectedDate.setHours(0, 0, 0, 0);
+
+    const locale = currentLanguage === 'es' ? 'es-ES' : 'en-US';
+    const dateString = todayPageSelectedDate.toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    page.innerHTML = `
+        <div class="page-header">
+            <h2 data-i18n="title_today_page"></h2>
+        </div>
+        <div class="today-container">
+            <div id="calendar-container"></div>
+            <div class="today-lists">
+                <div class="today-list-section">
+                    <h3 data-i18n="today_daily_routines"></h3>
+                    <div id="today-routines-list" class="library-list"></div>
+                </div>
+                <div class="today-list-section">
+                    <h3>${getTranslation('primary_missions')} - ${dateString}</h3>
+                    <div id="today-primary-missions-list" class="library-list"></div>
+                </div>
+                 <div class="today-list-section">
+                    <h3>${getTranslation('secondary_missions')} - ${dateString}</h3>
+                    <div id="today-secondary-missions-list" class="library-list"></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    applyTranslations(page);
+    renderCalendar(document.getElementById('calendar-container'));
+    renderTodayLists();
+}
+
+function renderTodayLists() {
+    const routinesListDiv = document.getElementById('today-routines-list');
+    const primaryMissionsListDiv = document.getElementById('today-primary-missions-list');
+    const secondaryMissionsListDiv = document.getElementById('today-secondary-missions-list');
+    
+    [routinesListDiv, primaryMissionsListDiv, secondaryMissionsListDiv].forEach(div => div.innerHTML = '');
+
+    // 1. Get Daily Routines (only show for current day)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (todayPageSelectedDate.getTime() === today.getTime()) {
+        const dailyRoutines = [];
+        Object.entries(dimensionLibraryData).forEach(([dimName, dimData]) => {
+            if (dimData.routines && Array.isArray(dimData.routines.daily)) {
+                dimData.routines.daily.forEach((routine, index) => {
+                    dailyRoutines.push({
+                        ...routine,
+                        context: { dimension: dimName, tab: 'routines', index, frequency: 'daily', originPage: 'todayPage' }
+                    });
+                });
+            }
+        });
+
+        if (dailyRoutines.length > 0) {
+            dailyRoutines.forEach(item => {
+                const itemDiv = createLibraryItem('routine', item.name, createRolesHtml(item.lifeRoles));
+                itemDiv.addEventListener('click', () => showPage('itemDetailPage', item.context));
+                routinesListDiv.appendChild(itemDiv);
+            });
+        } else {
+            routinesListDiv.innerHTML = `<p class="no-items" data-i18n="no_routines_today"></p>`;
+        }
+    } else {
+        routinesListDiv.innerHTML = `<p class="no-items">Daily routines are only displayed for the current date.</p>`;
+    }
+
+
+    // 2. Get Missions for selected date
+    const selectedDateStr = todayPageSelectedDate.toISOString().split('T')[0];
+    const primaryMissions = [];
+    const secondaryMissions = [];
+
+    Object.entries(dimensionLibraryData).forEach(([dimName, dimData]) => {
+        if (dimData.projects && Array.isArray(dimData.projects)) {
+            dimData.projects.forEach((project, projIndex) => {
+                const context = { dimension: dimName, tab: 'projects', index: projIndex, originPage: 'todayPage' };
+                project.primaryMissions?.forEach(mission => {
+                    if (mission.completionDate === selectedDateStr) {
+                        primaryMissions.push({ ...mission, project_name: project.name, context });
+                    }
+                });
+                project.secondaryMissions?.forEach(mission => {
+                    if (mission.completionDate === selectedDateStr) {
+                        secondaryMissions.push({ ...mission, project_name: project.name, context });
+                    }
+                });
+            });
+        }
+    });
+
+    if (primaryMissions.length > 0) {
+        primaryMissions.forEach(mission => {
+            const details = `<div class="card-details"><span>Project: ${mission.project_name}</span></div>`;
+            const itemDiv = createLibraryItem('project', mission.name, createRolesHtml([mission.lifeRole]), details);
+            itemDiv.addEventListener('click', () => showPage('itemDetailPage', mission.context));
+            primaryMissionsListDiv.appendChild(itemDiv);
+        });
+    } else {
+        primaryMissionsListDiv.innerHTML = `<p class="no-items" data-i18n="no_missions_today"></p>`;
+    }
+    
+    if (secondaryMissions.length > 0) {
+        secondaryMissions.forEach(mission => {
+            const details = `<div class="card-details"><span>Project: ${mission.project_name}</span></div>`;
+            const itemDiv = createLibraryItem('project', mission.name, createRolesHtml([mission.lifeRole]), details);
+            itemDiv.addEventListener('click', () => showPage('itemDetailPage', mission.context));
+            secondaryMissionsListDiv.appendChild(itemDiv);
+        });
+    } else {
+        secondaryMissionsListDiv.innerHTML = `<p class="no-items" data-i18n="no_missions_today"></p>`;
+    }
+
+    applyTranslations(document.getElementById('todayPage'));
+}
+
+function renderCalendar(container) {
+    if (!container) return;
+    container.innerHTML = ''; 
+
+    const missionsByDate = {};
+    Object.values(dimensionLibraryData).forEach(dimData => {
+        if (dimData.projects && Array.isArray(dimData.projects)) {
+            dimData.projects.forEach(project => {
+                [...(project.primaryMissions || []), ...(project.secondaryMissions || [])].forEach(mission => {
+                    if (mission.completionDate) {
+                        missionsByDate[mission.completionDate] = true;
+                    }
+                });
+            });
+        }
+    });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const month = todayPageSelectedDate.getMonth();
+    const year = todayPageSelectedDate.getFullYear();
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDayOfWeek = firstDay.getDay(); 
+
+    const locale = currentLanguage === 'es' ? 'es-ES' : 'en-US';
+    const monthName = firstDay.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+
+    const header = document.createElement('div');
+    header.className = 'calendar-header';
+    header.innerHTML = `
+        <button id="cal-prev" class="btn secondary-btn">&lt;</button>
+        <span class="calendar-month-year">${monthName}</span>
+        <button id="cal-next" class="btn secondary-btn">&gt;</button>
+    `;
+    container.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className = 'calendar-grid';
+    const daysOfWeek = currentLanguage === 'es' ? ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    daysOfWeek.forEach(day => {
+        grid.innerHTML += `<div class="calendar-day-header">${day}</div>`;
+    });
+
+    for (let i = 0; i < startDayOfWeek; i++) {
+        grid.innerHTML += '<div></div>'; // Blank cells for alignment
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'calendar-day';
+        dayCell.textContent = day;
+        
+        const thisDate = new Date(year, month, day);
+        const thisDateStr = thisDate.toISOString().split('T')[0];
+
+        if (thisDateStr === today.toISOString().split('T')[0]) dayCell.classList.add('is-today');
+        if (thisDateStr === todayPageSelectedDate.toISOString().split('T')[0]) dayCell.classList.add('is-selected');
+        if (missionsByDate[thisDateStr]) dayCell.classList.add('has-mission');
+        
+        dayCell.addEventListener('click', () => {
+            todayPageSelectedDate = new Date(year, month, day);
+            renderTodayPage();
+        });
+        grid.appendChild(dayCell);
+    }
+    container.appendChild(grid);
+
+    document.getElementById('cal-prev').addEventListener('click', () => {
+        todayPageSelectedDate.setMonth(todayPageSelectedDate.getMonth() - 1);
+        renderTodayPage();
+    });
+    document.getElementById('cal-next').addEventListener('click', () => {
+        todayPageSelectedDate.setMonth(todayPageSelectedDate.getMonth() + 1);
+        renderTodayPage();
+    });
+}
+
