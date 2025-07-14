@@ -20,6 +20,11 @@ let editingItem = {
     index: null,
     frequency: null,
 };
+let editingMissionInfo = {
+    type: null, // 'primaryMissions' or 'secondaryMissions'
+    id: null
+};
+
 
 // DOM Element References
 const inputsDiv = document.getElementById("inputs");
@@ -114,6 +119,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('saveWishlistItemBtn').addEventListener('click', saveWishlistItem);
     document.getElementById('cancelWishlistItemBtn').addEventListener('click', closeWishlistModal);
     document.getElementById('deleteWishlistItemBtn').addEventListener('click', deleteWishlistItem);
+
+    document.getElementById('saveMissionBtn').addEventListener('click', saveMission);
+    document.getElementById('cancelMissionBtn').addEventListener('click', closeMissionModal);
+    document.getElementById('deleteMissionBtn').addEventListener('click', deleteMission);
 
     document.body.addEventListener('click', handleGlobalClick);
 });
@@ -254,6 +263,7 @@ const translations = {
         confirm_load: "This will overwrite your current data with the version from your last save. Are you sure?",
         wishlist: "Wishlist", btn_add_wish: "Add to Wishlist", title_wishlist: "Life Wishlist", title_add_new_wish: "Add New Wish", title_edit_wish: "Edit Wish",
         no_wishes_role: "No wishes for this role yet.", label_wish_category: "Category", label_estimated_cost: "Est. Cost ($)", wish_cat_object: "Object", wish_cat_travel: "Travel", wish_cat_course: "Course",
+        primary_missions: "Primary Missions", secondary_missions: "Secondary Missions", btn_add_mission: "Add Mission", title_add_mission: "Add Mission", title_edit_mission: "Edit Mission", label_mission_name: "Mission Name", label_completion_date: "Completion Date",
     },
     es: {
         nav_life_visualization: "Visualización", nav_life_balance: "Balance de Vida", nav_life_roles: "Roles de Vida", nav_life_skills: "Habilidades de Vida", nav_life_resources: "Recursos de Vida", nav_options: "Opciones",
@@ -287,6 +297,7 @@ const translations = {
         confirm_load: "Esto sobreescribirá tus datos actuales con la versión de tu último guardado. ¿Estás seguro?",
         wishlist: "Lista de Deseos", btn_add_wish: "Añadir a Lista", title_wishlist: "Lista de Deseos de Vida", title_add_new_wish: "Añadir Nuevo Deseo", title_edit_wish: "Editar Deseo",
         no_wishes_role: "Aún no hay deseos para este rol.", label_wish_category: "Categoría", label_estimated_cost: "Costo Est. ($)", wish_cat_object: "Objeto", wish_cat_travel: "Viaje", wish_cat_course: "Curso",
+        primary_missions: "Misiones Primarias", secondary_missions: "Misiones Secundarias", btn_add_mission: "Añadir Misión", title_add_mission: "Añadir Misión", title_edit_mission: "Editar Misión", label_mission_name: "Nombre de la Misión", label_completion_date: "Fecha de Finalización",
     }
 };
 
@@ -311,7 +322,7 @@ function setLanguage(lang) {
 
     const activePage = [...document.querySelectorAll('.page')].find(p => p.style.display !== 'none' && p.style.display !== '');
     if (activePage) {
-        showPage(activePage.id);
+        showPage(activePage.id, { ...editingItem });
     }
 }
 
@@ -1563,7 +1574,35 @@ function setupAddButtons() {
     };
     for(const btnId in addConfigs) { document.getElementById(btnId)?.addEventListener("click", () => createItem(addConfigs[btnId])); }
 }
-function createItem(config) { const itemData = { ...config.defaults }; let isValid = true; for (const prop in config.inputs) { const input = document.getElementById(config.inputs[prop]); if (prop === 'name' && input.value.trim() === '') { alert(`Please enter a name.`); isValid = false; break; } itemData[prop] = input.type === 'number' ? parseFloat(input.value) || 0 : input.value; input.value = ''; } if (!isValid) return; for (const prop in config.selects) { itemData[prop] = getCustomSelectValue(config.selects[prop]); } const targetArray = config.frequency ? dimensionLibraryData[currentDimension].routines[config.frequency] : dimensionLibraryData[currentDimension][config.type + 's']; targetArray.push(itemData); saveToLocalStorage(); renderLibrary(currentDimension, currentTab); }
+function createItem(config) {
+    const itemData = { ...config.defaults };
+    let isValid = true;
+    for (const prop in config.inputs) {
+        const input = document.getElementById(config.inputs[prop]);
+        if (prop === 'name' && input.value.trim() === '') {
+            alert(`Please enter a name.`);
+            isValid = false;
+            break;
+        }
+        itemData[prop] = input.type === 'number' ? parseFloat(input.value) || 0 : input.value;
+        input.value = '';
+    }
+    if (!isValid) return;
+    for (const prop in config.selects) {
+        itemData[prop] = getCustomSelectValue(config.selects[prop]);
+    }
+
+    // Add empty mission arrays for new projects
+    if (config.type === 'project') {
+        itemData.primaryMissions = [];
+        itemData.secondaryMissions = [];
+    }
+
+    const targetArray = config.frequency ? dimensionLibraryData[currentDimension].routines[config.frequency] : dimensionLibraryData[currentDimension][config.type + 's'];
+    targetArray.push(itemData);
+    saveToLocalStorage();
+    renderLibrary(currentDimension, currentTab);
+}
 function deleteItem(dimension, tab, index, frequency) { if (confirm(getTranslation('confirm_delete'))) { if (tab === "routines") { dimensionLibraryData[dimension].routines[frequency].splice(index, 1); } else { dimensionLibraryData[dimension][tab].splice(index, 1); } saveToLocalStorage(); renderLibrary(dimension, tab); } }
 
 function renderItemDetailPage(context) {
@@ -1581,6 +1620,7 @@ function renderItemDetailPage(context) {
 
     if (!item) { return; }
 
+    const page = document.getElementById('itemDetailPage');
     const titleEl = document.getElementById('itemDetailTitle');
     const formContainer = document.getElementById('itemDetailFormContainer');
     const backLink = document.getElementById('backToOriginLink');
@@ -1612,6 +1652,14 @@ function renderItemDetailPage(context) {
 
     titleEl.textContent = `Edit ${item.name}`;
     formContainer.innerHTML = formHtml;
+    
+    // Clear old missions container if it exists
+    const oldMissionsContainer = page.querySelector('.missions-container');
+    if(oldMissionsContainer) oldMissionsContainer.remove();
+
+    if (tab === 'projects') {
+        renderProjectMissions(page, item);
+    }
 
     backLink.onclick = (e) => {
         e.preventDefault();
@@ -1985,7 +2033,8 @@ function loadFromLocalStorage() {
     }
     const financialKeys = ['incomes', 'expenses', 'savings', 'investments', 'debts', 'monthlyIncomes', 'monthlyExpenses'];
     financialKeys.forEach(key => {
-        if (!loadedLibrary.financials[key]) {
+        if (!loadedLibrary.financials || !loadedLibrary.financials[key]) {
+             if (!loadedLibrary.financials) loadedLibrary.financials = {};
             loadedLibrary.financials[key] = [];
         }
     });
@@ -1993,6 +2042,16 @@ function loadFromLocalStorage() {
         loadedLibrary.appSettings = defaultAppData.appSettings;
     }
     
+    // Ensure projects have mission arrays
+    Object.values(loadedLibrary).forEach(dim => {
+        if(dim && Array.isArray(dim.projects)) {
+            dim.projects.forEach(proj => {
+                if(!proj.primaryMissions) proj.primaryMissions = [];
+                if(!proj.secondaryMissions) proj.secondaryMissions = [];
+            });
+        }
+    });
+
     dimensionLibraryData = loadedLibrary;
 
     const visArtboard = document.getElementById('visArtboard');
@@ -2308,4 +2367,151 @@ function setupVisualizationPage() {
     });
 
     applyTransform();
+}
+
+/*****************************************************************
+ * * PROJECT MISSIONS
+ * *****************************************************************/
+function renderProjectMissions(pageContainer, project) {
+    const container = document.createElement('div');
+    container.className = 'missions-container';
+
+    container.innerHTML = `
+        <div class="mission-section">
+            <div class="mission-header">
+                <h4 data-i18n="primary_missions"></h4>
+                <button class="btn secondary-btn add-mission-btn" data-mission-type="primaryMissions"><i class="fas fa-plus"></i> <span data-i18n="btn_add_mission"></span></button>
+            </div>
+            <ul class="mission-list" id="primaryMissionsList"></ul>
+        </div>
+        <div class="mission-section">
+            <div class="mission-header">
+                 <h4 data-i18n="secondary_missions"></h4>
+                 <button class="btn secondary-btn add-mission-btn" data-mission-type="secondaryMissions"><i class="fas fa-plus"></i> <span data-i18n="btn_add_mission"></span></button>
+            </div>
+            <ul class="mission-list" id="secondaryMissionsList"></ul>
+        </div>
+    `;
+    
+    pageContainer.appendChild(container);
+    applyTranslations(container);
+
+    const primaryList = container.querySelector('#primaryMissionsList');
+    (project.primaryMissions || []).forEach(mission => {
+        primaryList.appendChild(createMissionElement(mission, 'primaryMissions'));
+    });
+
+    const secondaryList = container.querySelector('#secondaryMissionsList');
+    (project.secondaryMissions || []).forEach(mission => {
+        secondaryList.appendChild(createMissionElement(mission, 'secondaryMissions'));
+    });
+
+    container.querySelectorAll('.add-mission-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const missionType = btn.dataset.missionType;
+            openMissionModal(missionType);
+        });
+    });
+}
+
+function createMissionElement(mission, type) {
+    const li = document.createElement('li');
+    li.className = `mission-item ${mission.completed ? 'completed' : ''}`;
+    li.innerHTML = `
+        <div class="mission-info">
+            <input type="checkbox" ${mission.completed ? 'checked' : ''} />
+            <span class="mission-name">${mission.name}</span>
+        </div>
+        <div class="mission-details">
+            <span class="mission-role">${getTranslation(mission.lifeRole)}</span>
+            <span class="mission-date">${mission.completionDate}</span>
+            <div class="mission-actions">
+                <i class="fas fa-edit"></i>
+                <i class="fas fa-trash"></i>
+            </div>
+        </div>
+    `;
+
+    li.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
+        mission.completed = e.target.checked;
+        saveToLocalStorage(false);
+        li.classList.toggle('completed', mission.completed);
+    });
+
+    li.querySelector('.fa-edit').addEventListener('click', () => openMissionModal(type, mission.id));
+    li.querySelector('.fa-trash').addEventListener('click', () => deleteMission(type, mission.id));
+
+    return li;
+}
+
+function openMissionModal(missionType, missionId = null) {
+    editingMissionInfo = { type: missionType, id: missionId };
+    
+    const modal = document.getElementById('missionModal');
+    const title = document.getElementById('missionModalTitle');
+    const deleteBtn = document.getElementById('deleteMissionBtn');
+    
+    const roleOptions = dimensionLibraryData.appSettings.userRoles.map(r => ({ value: r.key, text: getTranslation(r.key) }));
+    
+    if (missionId) { // Editing
+        const project = dimensionLibraryData[editingItem.dimension][editingItem.tab][editingItem.index];
+        const mission = project[missionType].find(m => m.id === missionId);
+        title.textContent = getTranslation('title_edit_mission');
+        document.getElementById('missionNameInput').value = mission.name;
+        document.getElementById('missionDateInput').value = mission.completionDate;
+        createCustomSelect(document.getElementById('missionRoleContainer'), roleOptions, { placeholder: getTranslation('ph_life_roles'), initialValue: mission.lifeRole });
+        deleteBtn.style.display = 'inline-block';
+    } else { // Adding new
+        title.textContent = getTranslation('title_add_mission');
+        document.getElementById('missionNameInput').value = '';
+        document.getElementById('missionDateInput').value = new Date().toISOString().split('T')[0];
+        createCustomSelect(document.getElementById('missionRoleContainer'), roleOptions, { placeholder: getTranslation('ph_life_roles') });
+        deleteBtn.style.display = 'none';
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function closeMissionModal() {
+    document.getElementById('missionModal').style.display = 'none';
+}
+
+function saveMission() {
+    const { type, id } = editingMissionInfo;
+    const project = dimensionLibraryData[editingItem.dimension][editingItem.tab][editingItem.index];
+
+    const missionData = {
+        name: document.getElementById('missionNameInput').value.trim(),
+        completionDate: document.getElementById('missionDateInput').value,
+        lifeRole: getCustomSelectValue('missionRoleContainer'),
+    };
+
+    if (!missionData.name || !missionData.lifeRole) {
+        alert("Please provide a name and a life role for the mission.");
+        return;
+    }
+
+    if (id) { // Update existing mission
+        const missionIndex = project[type].findIndex(m => m.id === id);
+        if (missionIndex > -1) {
+            project[type][missionIndex] = { ...project[type][missionIndex], ...missionData };
+        }
+    } else { // Add new mission
+        missionData.id = `mission_${new Date().getTime()}`;
+        missionData.completed = false;
+        project[type].push(missionData);
+    }
+    
+    saveToLocalStorage();
+    renderItemDetailPage(editingItem);
+    closeMissionModal();
+}
+
+function deleteMission(missionType, missionId) {
+    if (confirm(getTranslation('confirm_delete'))) {
+        const project = dimensionLibraryData[editingItem.dimension][editingItem.tab][editingItem.index];
+        project[missionType] = project[missionType].filter(m => m.id !== missionId);
+        saveToLocalStorage();
+        renderItemDetailPage(editingItem);
+    }
 }

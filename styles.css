@@ -934,3 +934,98 @@ input:checked + .slider:before { transform: translateX(26px); }
     font-size: 0.9rem;
     color: var(--text-secondary);
 }
+
+/* Add these styles to the end of styles.css */
+/* ---------------------------- */
+/* PROJECT MISSIONS             */
+/* ---------------------------- */
+.missions-container {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.mission-section {
+    margin-bottom: 20px;
+}
+
+.mission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.mission-header h4 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.mission-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mission-item {
+    background-color: var(--bg-tertiary);
+    padding: 10px 15px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    transition: background-color 0.2s;
+}
+
+.mission-item.completed .mission-name {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+}
+
+.mission-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-grow: 1;
+}
+
+.mission-info input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.mission-details {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.mission-role {
+    background-color: var(--accent-primary);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.mission-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.mission-actions i {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.mission-actions i:hover {
+    color: var(--text-primary);
+}

@@ -290,6 +290,22 @@
         </div>
     </div>
 
+    <div id="missionModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h3 id="missionModalTitle"></h3>
+        <div class="resource-form-inputs" style="padding-top: 15px;">
+            <label><span data-i18n="label_mission_name"></span>: <input type="text" id="missionNameInput"></label>
+            <label><span data-i18n="label_completion_date"></span>: <input type="date" id="missionDateInput"></label>
+            <label><span data-i18n="ph_life_roles"></span>: <div class="custom-select-container" id="missionRoleContainer"></div></label>
+        </div>
+        <div class="modal-actions">
+            <button id="deleteMissionBtn" class="btn danger-btn" style="display: none;" data-i18n="btn_delete"></button>
+            <button id="saveMissionBtn" class="btn primary-btn" data-i18n="btn_save"></button>
+            <button id="cancelMissionBtn" class="btn secondary-btn" data-i18n="btn_cancel"></button>
+        </div>
+    </div>
+</div>
+
     <div id="resourceModal" class="modal-overlay" style="display: none;"><div class="modal-content"><h3 id="resourceModalTitle"></h3><div id="resourceModalFields" class="resource-modal-fields"><div class="resource-image-upload"><img id="resourceImagePreview" src="https://via.placeholder.com/150" alt="Resource Image Preview"><input type="file" id="resourceImageInput" accept="image/*"><label for="resourceImageInput" class="btn secondary-btn" data-i18n="btn_upload_image"></label></div><div class="resource-form-inputs"><label><span data-i18n="label_name"></span>: <input type="text" id="resourceNameInput"></label><label><span data-i18n="label_category"></span>: <input type="text" id="resourceCategoryInput" disabled></label><label><span data-i18n="label_description"></span>: <textarea id="resourceDescriptionInput"></textarea></label><label><span data-i18n="label_value"></span>: <input type="number" id="resourceValueInput"></label><label><span data-i18n="label_purchase_date"></span>: <input type="date" id="resourceDateInput"></label></div></div><div class="modal-actions"><button id="saveResourceBtn" class="btn primary-btn" data-i18n="btn_save"></button><button id="deleteResourceBtn" class="btn danger-btn" style="display: none;" data-i18n="btn_delete"></button><button id="cancelResourceBtn" class="btn secondary-btn" data-i18n="btn_cancel"></button></div></div></div>
     <div id="financialItemModal" class="modal-overlay" style="display: none;"><div class="modal-content"><h3 id="financialModalTitle"></h3><div class="resource-form-inputs" style="padding-top: 15px;"><label><span data-i18n="label_name"></span>: <input type="text" id="financialNameInput"></label><label><span data-i18n="label_amount"></span>: <input type="number" id="financialAmountInput"></label><label><span data-i18n="label_date"></span>: <input type="date" id="financialDateInput"></label></div><div class="modal-actions"><button id="saveFinancialItemBtn" class="btn primary-btn" data-i18n="btn_save"></button><button id="deleteFinancialItemBtn" class="btn danger-btn" style="display: none;" data-i18n="btn_delete"></button><button id="cancelFinancialItemBtn" class="btn secondary-btn" data-i18n="btn_cancel"></button></div></div></div>
     <div id="optionsModal" class="modal-overlay" style="display: none;"><div class="modal-content"><h3 data-i18n="nav_options"></h3><div class="options-container"><div class="option-item"><label for="themeToggle" data-i18n="label_color_theme"></label><div class="toggle-switch"><input type="checkbox" id="themeToggle"><label for="themeToggle" class="slider"></label></div></div><div class="option-item"><label for="languageSelector" data-i18n="label_language"></label><select id="languageSelector"><option value="en">English</option><option value="es">Español</option></select></div></div><div class="modal-actions"><button id="closeOptionsBtn" class="btn primary-btn" data-i18n="btn_done"></button></div></div></div>
