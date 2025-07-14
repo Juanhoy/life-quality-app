@@ -2620,8 +2620,31 @@ function renderTodayLists() {
 
         if (dailyRoutines.length > 0) {
             dailyRoutines.forEach(item => {
-                const itemDiv = createLibraryItem('routine', item.name, createRolesHtml(item.lifeRoles));
-                itemDiv.addEventListener('click', () => showPage('itemDetailPage', item.context));
+                const { context } = item;
+                const toggleId = `today-compliance-${context.dimension}-${context.index}`;
+                const complianceHtml = `
+                    <div class="compliance-toggle-container">
+                        <span class="toggle-label">${getTranslation('label_compliance')}:</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="${toggleId}" ${item.compliance ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>`;
+
+                const itemDiv = createLibraryItem('routine', item.name, createRolesHtml(item.lifeRoles), '', '', complianceHtml);
+                itemDiv.addEventListener('click', () => showPage('itemDetailPage', context));
+
+                const toggleContainer = itemDiv.querySelector('.compliance-toggle-container');
+                if (toggleContainer) {
+                    toggleContainer.addEventListener('click', (e) => e.stopPropagation());
+                    
+                    const complianceToggle = toggleContainer.querySelector('input');
+                    complianceToggle.addEventListener('change', () => {
+                        const routineToUpdate = dimensionLibraryData[context.dimension].routines[context.frequency][context.index];
+                        routineToUpdate.compliance = !routineToUpdate.compliance;
+                        saveToLocalStorage(false);
+                    });
+                }
                 routinesListDiv.appendChild(itemDiv);
             });
         } else {
@@ -2657,10 +2680,7 @@ function renderTodayLists() {
 
     if (primaryMissions.length > 0) {
         primaryMissions.forEach(mission => {
-            const details = `<div class="card-details"><span>Project: ${mission.project_name}</span></div>`;
-            const itemDiv = createLibraryItem('project', mission.name, createRolesHtml([mission.lifeRole]), details);
-            itemDiv.addEventListener('click', () => showPage('itemDetailPage', mission.context));
-            primaryMissionsListDiv.appendChild(itemDiv);
+            primaryMissionsListDiv.appendChild(createTodayMissionElement(mission));
         });
     } else {
         primaryMissionsListDiv.innerHTML = `<p class="no-items" data-i18n="no_missions_today"></p>`;
@@ -2668,10 +2688,7 @@ function renderTodayLists() {
     
     if (secondaryMissions.length > 0) {
         secondaryMissions.forEach(mission => {
-            const details = `<div class="card-details"><span>Project: ${mission.project_name}</span></div>`;
-            const itemDiv = createLibraryItem('project', mission.name, createRolesHtml([mission.lifeRole]), details);
-            itemDiv.addEventListener('click', () => showPage('itemDetailPage', mission.context));
-            secondaryMissionsListDiv.appendChild(itemDiv);
+            secondaryMissionsListDiv.appendChild(createTodayMissionElement(mission));
         });
     } else {
         secondaryMissionsListDiv.innerHTML = `<p class="no-items" data-i18n="no_missions_today"></p>`;
@@ -2679,6 +2696,50 @@ function renderTodayLists() {
 
     applyTranslations(document.getElementById('todayPage'));
 }
+
+function createTodayMissionElement(mission) {
+    const li = document.createElement('li');
+    li.className = `mission-item ${mission.completed ? 'completed' : ''}`;
+    
+    li.innerHTML = `
+        <div class="mission-info">
+            <input type="checkbox" ${mission.completed ? 'checked' : ''} />
+            <span class="mission-name">${mission.name}</span>
+        </div>
+        <div class="mission-details">
+            <span class="project-tag">${mission.project_name}</span>
+            <span class="mission-role">${getTranslation(mission.lifeRole)}</span>
+        </div>
+    `;
+
+    li.addEventListener('click', (e) => {
+        if (e.target.type !== 'checkbox') {
+            showPage('itemDetailPage', mission.context);
+        }
+    });
+
+    const checkbox = li.querySelector('input[type="checkbox"]');
+    checkbox.addEventListener('change', () => {
+        const { dimension, index: projIndex } = mission.context;
+        const project = dimensionLibraryData[dimension].projects[projIndex];
+        
+        let missionToUpdate = project.primaryMissions.find(m => m.id === mission.id);
+        let missionList = 'primaryMissions';
+        if (!missionToUpdate) {
+            missionToUpdate = project.secondaryMissions.find(m => m.id === mission.id);
+            missionList = 'secondaryMissions';
+        }
+
+        if (missionToUpdate) {
+            missionToUpdate.completed = checkbox.checked;
+            saveToLocalStorage(false);
+            li.classList.toggle('completed', checkbox.checked);
+        }
+    });
+
+    return li;
+}
+
 
 function renderCalendar(container) {
     if (!container) return;
@@ -2760,4 +2821,3 @@ function renderCalendar(container) {
         renderTodayPage();
     });
 }
-

@@ -1154,3 +1154,14 @@ input:checked + .slider:before { transform: translateX(26px); }
 .calendar-day.is-selected.has-mission::after {
     background-color: white;
 }
+
+/* (Add this style to the end of your styles.css file) */
+
+.project-tag {
+    background-color: var(--accent-secondary);
+    color: #ffffff;
+    padding: 2px 8px;
+    font-size: 0.8rem;
+    border-radius: 10px;
+    font-weight: 500;
+}
