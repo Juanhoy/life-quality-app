@@ -10,7 +10,8 @@ let roleCardState = {};
 let editingResourceId = null;
 let currentPageOrigin = 'lifeBalancePage';
 let editingFinancialInfo = { type: null, id: null };
-let editingSkillInfo = { roleKey: null, index: null }; 
+let editingSkillInfo = { roleKey: null, index: null };
+let editingWishlistItemInfo = { roleKey: null, index: null };
 
 // Editing variables for library items
 let editingItem = {
@@ -63,7 +64,8 @@ const defaultAppData = {
     Fun: { challenges: [], goals: [], projects: [], routines: { daily: [], weekly: [], monthly: [] }},
     skills: [],
     resources: [],
-    financials: { incomes: [], expenses: [], savings: [], investments: [], debts: [] }
+    financials: { incomes: [], expenses: [], savings: [], investments: [], debts: [], monthlyIncomes: [], monthlyExpenses: [] },
+    wishlist: []
 };
 
 const dimensions = [
@@ -84,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupVisualizationPage();
     loadFromLocalStorage();
     setupTopNav();
-    setupOptions(); 
+    setupOptions();
     setupManageRolesPage();
 
     document.getElementById("saveDataBtn").addEventListener("click", saveToLocalStorage);
@@ -108,6 +110,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('saveSkillBtn').addEventListener('click', saveSkill);
     document.getElementById('cancelSkillBtn').addEventListener('click', closeSkillModal);
     document.getElementById('deleteSkillBtn').addEventListener('click', deleteSkill);
+
+    document.getElementById('saveWishlistItemBtn').addEventListener('click', saveWishlistItem);
+    document.getElementById('cancelWishlistItemBtn').addEventListener('click', closeWishlistModal);
+    document.getElementById('deleteWishlistItemBtn').addEventListener('click', deleteWishlistItem);
 
     document.body.addEventListener('click', handleGlobalClick);
 });
@@ -155,6 +161,7 @@ function showPage(pageId, context = {}) {
         case 'resourceCategoryDetailPage': renderResourceCategoryPage(context); break;
         case 'itemDetailPage': renderItemDetailPage(context); break;
         case 'expandedRolePage': renderExpandedRolePage(context); break;
+        case 'wishlistPage': renderWishlistPage(); break;
     }
 }
 
@@ -232,9 +239,9 @@ const translations = {
         label_skill_name: "Skill Name", label_knowledge_level: "Knowledge Level (%)", label_xp_level: "XP Level (%)",
         importance_high: "High", importance_medium: "Medium", importance_low: "Low",
         health: "Health", family: "Family", freedom: "Freedom", community: "Community", management: "Management", learning: "Learning", creation: "Creation", fun: "Fun",
-        money: "Money", total_net_worth: "Total Net Worth", incomes: "Incomes", expenses: "Expenses", savings: "Savings", investments: "Investments", debts: "Debts",
-        btn_add_income: "Add Income", btn_add_expense: "Add Expense", btn_add_saving: "Add Saving", btn_add_investment: "Add Investment", btn_add_debt: "Add Debt",
-        res_money: "Money", res_vehicles: "Vehicles", res_studio: "Studio", res_houses: "Houses", res_electronics: "Electronics", res_furniture: "Furniture", res_clothes: "Clothes", res_gym_and_sports: "Gym and Sports", res_musical_instruments: "Musical Instruments",
+        money: "Money", total_net_worth: "Total Net Worth", monthly_balance: "Monthly Balance", incomes: "Incomes", expenses: "Expenses", savings: "Savings", investments: "Investments", debts: "Debts", monthlyIncomes: "Monthly Incomes", monthlyExpenses: "Monthly Expenses",
+        btn_add_income: "Add Income", btn_add_expense: "Add Expense", btn_add_saving: "Add Saving", btn_add_investment: "Add Investment", btn_add_debt: "Add Debt", btn_add_monthlyIncome: "Add Monthly Income", btn_add_monthlyExpense: "Add Monthly Expense",
+        res_money: "Money", res_vehicles: "Vehicles", res_studio: "Studio", res_houses: "Houses", res_electronics: "Electronics", res_furniture: "Furniture", res_clothes: "Clothes", res_gym_and_sports: "Gym and Sports", res_musical_instruments: "Musical Instruments", res_wishlist: "Wishlist",
         athlete: "Athlete", artist: "Artist", brother: "Brother", chef: "Chef", citizen: "Citizen", creator: "Creator", designer: "Designer", dj: "DJ", dreamer: "Dreamer",
         engineer: "Engineer", entrepreneur: "Entrepreneur", explorer: "Explorer", father: "Father", friend: "Friend", gardener: "Gardener", healer: "Healer", human: "Human",
         innovator: "Innovator", leader: "Leader", learner: "Learner", lover: "Lover", manager: "Manager", mentor: "Mentor", mother: "Mother", musician: "Musician",
@@ -245,6 +252,8 @@ const translations = {
         confirm_delete: "Are you sure you want to delete this item?",
         confirm_delete_role_text: "Are you sure you want to delete the role '{roleName}'? This will remove it from all associated items.",
         confirm_load: "This will overwrite your current data with the version from your last save. Are you sure?",
+        wishlist: "Wishlist", btn_add_wish: "Add to Wishlist", title_wishlist: "Life Wishlist", title_add_new_wish: "Add New Wish", title_edit_wish: "Edit Wish",
+        no_wishes_role: "No wishes for this role yet.", label_wish_category: "Category", label_estimated_cost: "Est. Cost ($)", wish_cat_object: "Object", wish_cat_travel: "Travel", wish_cat_course: "Course",
     },
     es: {
         nav_life_visualization: "Visualización", nav_life_balance: "Balance de Vida", nav_life_roles: "Roles de Vida", nav_life_skills: "Habilidades de Vida", nav_life_resources: "Recursos de Vida", nav_options: "Opciones",
@@ -263,9 +272,9 @@ const translations = {
         label_skill_name: "Nombre de Habilidad", label_knowledge_level: "Nivel de Conocimiento (%)", label_xp_level: "Nivel de XP (%)",
         importance_high: "Alta", importance_medium: "Media", importance_low: "Baja",
         health: "Salud", family: "Familia", freedom: "Libertad", community: "Comunidad", management: "Gestión", learning: "Aprendizaje", creation: "Creación", fun: "Diversión",
-        money: "Dinero", total_net_worth: "Patrimonio Neto Total", incomes: "Ingresos", expenses: "Gastos", savings: "Ahorros", investments: "Inversiones", debts: "Deudas",
-        btn_add_income: "Añadir Ingreso", btn_add_expense: "Añadir Gasto", btn_add_saving: "Añadir Ahorro", btn_add_investment: "Añadir Inversión", btn_add_debt: "Añadir Deuda",
-        res_money: "Dinero", res_vehicles: "Vehículos", res_studio: "Estudio", res_houses: "Viviendas", res_electronics: "Electrónica", res_furniture: "Muebles", res_clothes: "Ropa", res_gym_and_sports: "Gimnasio y Deportes", res_musical_instruments: "Instrumentos Musicales",
+        money: "Dinero", total_net_worth: "Patrimonio Neto Total", monthly_balance: "Balance Mensual", incomes: "Ingresos", expenses: "Gastos", savings: "Ahorros", investments: "Inversiones", debts: "Deudas", monthlyIncomes: "Ingresos Mensuales", monthlyExpenses: "Gastos Mensuales",
+        btn_add_income: "Añadir Ingreso", btn_add_expense: "Añadir Gasto", btn_add_saving: "Añadir Ahorro", btn_add_investment: "Añadir Inversión", btn_add_debt: "Añadir Deuda", btn_add_monthlyIncome: "Añadir Ingreso Mensual", btn_add_monthlyExpense: "Añadir Gasto Mensual",
+        res_money: "Dinero", res_vehicles: "Vehículos", res_studio: "Estudio", res_houses: "Viviendas", res_electronics: "Electrónica", res_furniture: "Muebles", res_clothes: "Ropa", res_gym_and_sports: "Gimnasio y Deportes", res_musical_instruments: "Instrumentos Musicales", res_wishlist: "Lista de Deseos",
         athlete: "Atleta", artist: "Artista", brother: "Hermano", chef: "Chef", citizen: "Ciudadano", creator: "Creador", designer: "Diseñador", dj: "DJ", dreamer: "Soñador",
         engineer: "Ingeniero", entrepreneur: "Emprendedor", explorer: "Explorador", father: "Padre", friend: "Amigo", gardener: "Jardinero", healer: "Sanador", human: "Humano",
         innovator: "Innovador", leader: "Líder", learner: "Aprendiz", lover: "Amante", manager: "Gerente", mentor: "Mentor", mother: "Madre", musician: "Músico",
@@ -276,6 +285,8 @@ const translations = {
         confirm_delete: "¿Estás seguro de que quieres eliminar este objeto?",
         confirm_delete_role_text: "¿Estás seguro de que quieres eliminar el rol '{roleName}'? Esto lo eliminará de todos los objetos asociados.",
         confirm_load: "Esto sobreescribirá tus datos actuales con la versión de tu último guardado. ¿Estás seguro?",
+        wishlist: "Lista de Deseos", btn_add_wish: "Añadir a Lista", title_wishlist: "Lista de Deseos de Vida", title_add_new_wish: "Añadir Nuevo Deseo", title_edit_wish: "Editar Deseo",
+        no_wishes_role: "Aún no hay deseos para este rol.", label_wish_category: "Categoría", label_estimated_cost: "Costo Est. ($)", wish_cat_object: "Objeto", wish_cat_travel: "Viaje", wish_cat_course: "Curso",
     }
 };
 
@@ -298,11 +309,12 @@ function setLanguage(lang) {
 
     updateDynamicText(lang);
 
-    const activePage = [...document.querySelectorAll('.page')].find(p => p.style.display !== 'none');
+    const activePage = [...document.querySelectorAll('.page')].find(p => p.style.display !== 'none' && p.style.display !== '');
     if (activePage) {
         showPage(activePage.id);
     }
 }
+
 
 function applyTranslations(element) {
     const langDict = translations[currentLanguage] || translations.en;
@@ -390,6 +402,7 @@ function setupTopNav() {
             if (dim.name === currentDimension) li.classList.add("active");
             li.addEventListener("click", () => {
                 currentDimension = dim.name;
+                document.getElementById("selectedDimensionTitle").textContent = getTranslation(dim.key);
                 if(document.getElementById('lifeBalancePage').style.display !== 'none') {
                     renderLibrary(currentDimension, currentTab);
                 }
@@ -594,25 +607,28 @@ function deleteRoleFromUser(roleKey) {
         dimensionLibraryData.appSettings.userRoles = dimensionLibraryData.appSettings.userRoles.filter(r => r.key !== roleKey);
 
         for (const dimName in dimensionLibraryData) {
-            if (typeof dimensionLibraryData[dimName] === 'object' && !['appSettings', 'resources', 'financials'].includes(dimName)) {
-                const dim = dimensionLibraryData[dimName];
-                ['challenges', 'goals', 'projects'].forEach(cat => {
-                    dim[cat]?.forEach(item => {
+            if (typeof dimensionLibraryData[dimName] !== 'object' || ['appSettings', 'resources', 'financials', 'skills', 'wishlist'].includes(dimName)) continue;
+            const dim = dimensionLibraryData[dimName];
+            ['challenges', 'goals', 'projects'].forEach(cat => {
+                dim[cat]?.forEach(item => {
+                    if (item.lifeRoles) {
+                        item.lifeRoles = item.lifeRoles.filter(rKey => rKey !== roleKey);
+                    }
+                });
+            });
+            if (dim.routines) {
+                Object.values(dim.routines).forEach(freqArray => {
+                    freqArray?.forEach(item => {
                         if (item.lifeRoles) {
                             item.lifeRoles = item.lifeRoles.filter(rKey => rKey !== roleKey);
                         }
                     });
                 });
-                if (dim.routines) {
-                    Object.values(dim.routines).forEach(freqArray => {
-                        freqArray?.forEach(item => {
-                            if (item.lifeRoles) {
-                                item.lifeRoles = item.lifeRoles.filter(rKey => rKey !== roleKey);
-                            }
-                        });
-                    });
-                }
             }
+        }
+        
+        if (dimensionLibraryData.wishlist) {
+            dimensionLibraryData.wishlist = dimensionLibraryData.wishlist.filter(item => item.roleKey !== roleKey);
         }
 
         saveToLocalStorage();
@@ -659,7 +675,7 @@ function renderLifeRolesPage() {
     });
 
     for (const dimName in dimensionLibraryData) {
-        if (['appSettings', 'resources', 'financials', 'skills'].includes(dimName)) continue;
+        if (['appSettings', 'resources', 'financials', 'skills', 'wishlist'].includes(dimName)) continue;
         const dim = dimensionLibraryData[dimName];
 
         const processItem = (item, index, category, tab, frequency) => {
@@ -903,6 +919,7 @@ function saveSkill() {
     if (index !== undefined && index !== null) {
         dimensionLibraryData.skills[index] = skillData;
     } else {
+        if (!dimensionLibraryData.skills) dimensionLibraryData.skills = [];
         dimensionLibraryData.skills.push(skillData);
     }
 
@@ -969,7 +986,7 @@ function renderExpandedRolePage(context) {
     // --- Find and render all items for this role ---
     const allItems = { goals: [], challenges: [], projects: [], routines: [] };
     for (const dimName in dimensionLibraryData) {
-        if (['appSettings', 'resources', 'financials', 'skills'].includes(dimName)) continue;
+        if (['appSettings', 'resources', 'financials', 'skills', 'wishlist'].includes(dimName)) continue;
         const dim = dimensionLibraryData[dimName];
         ['goals', 'challenges', 'projects'].forEach(cat => {
             dim[cat]?.forEach((item, index) => {
@@ -1130,7 +1147,8 @@ function renderLifeResourcesPage() {
     }, {});
 
     const defaultCategories = [
-        { key: 'money', name: 'Money'}, { key: 'vehicles', name: 'Vehicles'}, { key: 'studio', name: 'Studio'}, { key: 'houses', name: 'Houses'},
+        { key: 'money', name: 'Money'}, { key: 'wishlist', name: 'Wishlist'},
+        { key: 'vehicles', name: 'Vehicles'}, { key: 'studio', name: 'Studio'}, { key: 'houses', name: 'Houses'},
         { key: 'electronics', name: 'Electronics'}, { key: 'furniture', name: 'Furniture'}, { key: 'clothes', name: 'Clothes'},
         { key: 'gym_and_sports', name: 'Gym and Sports'}, { key: 'musical_instruments', name: 'Musical Instruments'}
     ];
@@ -1141,18 +1159,37 @@ function renderLifeResourcesPage() {
         }
     });
 
-    const categoryIcons = { "Money": "fa-wallet", "Vehicles": "fa-car", "Studio": "fa-mountain-sun", "Houses": "fa-home", "Electronics": "fa-laptop", "Furniture": "fa-couch", "Clothes": "fa-shirt", "Gym and Sports": "fa-baseball", "Musical Instruments": "fa-guitar", "Default": "fa-box" };
+    const categoryIcons = {
+        "Money": "fa-wallet", "Wishlist": "fa-star", "Vehicles": "fa-car", "Studio": "fa-mountain-sun", "Houses": "fa-home",
+        "Electronics": "fa-laptop", "Furniture": "fa-couch", "Clothes": "fa-shirt", "Gym and Sports": "fa-baseball",
+        "Musical Instruments": "fa-guitar", "Default": "fa-box"
+    };
 
     for(const categoryName in categories) {
         const card = document.createElement('div');
         card.className = 'resource-category-card';
         const translationKey = "res_" + categories[categoryName].key;
-        card.innerHTML = `<div class="resource-icon"><i class="fas ${categoryIcons[categoryName] || categoryIcons['Default']}"></i></div><h3>${getTranslation(translationKey)}</h3><p class="resource-stat-label">${categories[categoryName].count} items</p>`;
+        let itemCount = categories[categoryName].count;
+        
+        if (categoryName === 'Wishlist') {
+            itemCount = (dimensionLibraryData.wishlist || []).length;
+        }
+        if (categoryName === 'Money') {
+            const { incomes = [], expenses = [], savings = [], investments = [], debts = [], monthlyIncomes = [], monthlyExpenses = [] } = dimensionLibraryData.financials;
+            itemCount = incomes.length + expenses.length + savings.length + investments.length + debts.length + monthlyIncomes.length + monthlyExpenses.length;
+        }
+
+        card.innerHTML = `<div class="resource-icon"><i class="fas ${categoryIcons[categoryName] || categoryIcons['Default']}"></i></div><h3>${getTranslation(translationKey)}</h3><p class="resource-stat-label">${itemCount} items</p>`;
 
         if (categoryName === 'Money') {
             card.addEventListener('click', () => {
                 currentPageOrigin = 'lifeResourcesPage';
                 showPage('financialsDetailPage');
+            });
+        } else if (categoryName === 'Wishlist') {
+             card.addEventListener('click', () => {
+                currentPageOrigin = 'lifeResourcesPage';
+                showPage('wishlistPage');
             });
         } else {
             card.addEventListener('click', () => {
@@ -1163,6 +1200,7 @@ function renderLifeResourcesPage() {
         contentDiv.appendChild(card);
     }
 }
+
 
 /**
  * Renders the page for a specific resource category.
@@ -1203,27 +1241,42 @@ function renderResourceCategoryPage(context) {
  */
 function renderFinancialsPage() {
     const page = document.getElementById('financialsDetailPage');
-    const financials = dimensionLibraryData.financials;
-    const assetValue = (dimensionLibraryData.resources || [])
-        .filter(r => r.category && r.category !== 'Money')
-        .reduce((sum, item) => sum + (item.value || 0), 0);
+    if (!page) return;
 
-    const calculateSum = (type) => financials[type].reduce((sum, item) => sum + (item.amount || 0), 0);
+    const financials = dimensionLibraryData.financials || {};
+    const calculateSum = (type) => (Array.isArray(financials[type]) ? financials[type] : []).reduce((sum, item) => sum + (item.amount || 0), 0);
+    
     const totalIncomes = calculateSum('incomes');
     const totalExpenses = calculateSum('expenses');
     const totalSavings = calculateSum('savings');
     const totalInvestments = calculateSum('investments');
     const totalDebts = calculateSum('debts');
+    const totalMonthlyIncomes = calculateSum('monthlyIncomes');
+    const totalMonthlyExpenses = calculateSum('monthlyExpenses');
+    
+    const assetValue = (dimensionLibraryData.resources || [])
+        .filter(r => r.category && r.category !== 'Money' && r.value)
+        .reduce((sum, item) => sum + item.value, 0);
 
     const totalBalance = (totalIncomes + totalSavings + totalInvestments + assetValue) - (totalExpenses + totalDebts);
+    const monthlyBalance = totalMonthlyIncomes - totalMonthlyExpenses;
 
     page.innerHTML = `
-        <div class="page-header"><h2 class="breadcrumb"><a href="#" id="backBtn"><i class="fas fa-arrow-left"></i> <span data-i18n="nav_life_resources"></span></a> / <span data-i18n="money"></span></h2></div>
+        <div class="page-header">
+            <h2 class="breadcrumb"><a href="#" id="backBtn"><i class="fas fa-arrow-left"></i> <span data-i18n="nav_life_resources"></span></a> / <span data-i18n="res_money"></span></h2>
+        </div>
         <div class="total-balance-card ${totalBalance >= 0 ? 'positive' : 'negative'}">
             <h3 data-i18n="total_net_worth"></h3>
             <p class="balance-amount">$${totalBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
         </div>
+        <div class="total-balance-card ${monthlyBalance >= 0 ? 'positive' : 'negative'}" style="margin-top: 20px; border-left-color: #ff9800;">
+            <h3 data-i18n="monthly_balance"></h3>
+            <p class="balance-amount">$${monthlyBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+        </div>
+
         <div class="financials-grid">
+            <div class="financial-column" data-type="monthlyIncomes"><h3><i class="fas fa-calendar-day"></i> <span data-i18n="monthlyIncomes"></span></h3><ul></ul><button class="btn secondary-btn add-financial-btn" data-i18n="btn_add_monthlyIncome"></button></div>
+            <div class="financial-column" data-type="monthlyExpenses"><h3><i class="fas fa-calendar-times"></i> <span data-i18n="monthlyExpenses"></span></h3><ul></ul><button class="btn secondary-btn add-financial-btn" data-i18n="btn_add_monthlyExpense"></button></div>
             <div class="financial-column" data-type="incomes"><h3><i class="fas fa-arrow-down"></i> <span data-i18n="incomes"></span></h3><ul></ul><button class="btn secondary-btn add-financial-btn" data-i18n="btn_add_income"></button></div>
             <div class="financial-column" data-type="expenses"><h3><i class="fas fa-arrow-up"></i> <span data-i18n="expenses"></span></h3><ul></ul><button class="btn secondary-btn add-financial-btn" data-i18n="btn_add_expense"></button></div>
             <div class="financial-column" data-type="savings"><h3><i class="fas fa-piggy-bank"></i> <span data-i18n="savings"></span></h3><ul></ul><button class="btn secondary-btn add-financial-btn" data-i18n="btn_add_saving"></button></div>
@@ -1232,16 +1285,18 @@ function renderFinancialsPage() {
         </div>`;
 
     for (const type in financials) {
-        const column = page.querySelector(`.financial-column[data-type="${type}"]`);
-        const ul = column.querySelector('ul');
-        financials[type].forEach(item => {
-            const li = document.createElement('li');
-            li.dataset.id = item.id;
-            li.innerHTML = `<span class="financial-item-name">${item.name}</span><span class="financial-item-amount">$${item.amount.toLocaleString()}</span>`;
-            li.addEventListener('click', () => openFinancialItemModal(type, item.id));
-            ul.appendChild(li);
-        });
-        column.querySelector('.add-financial-btn').addEventListener('click', () => openFinancialItemModal(type));
+        if (page.querySelector(`.financial-column[data-type="${type}"]`)) {
+            const column = page.querySelector(`.financial-column[data-type="${type}"]`);
+            const ul = column.querySelector('ul');
+            financials[type].forEach(item => {
+                const li = document.createElement('li');
+                li.dataset.id = item.id;
+                li.innerHTML = `<span class="financial-item-name">${item.name}</span><span class="financial-item-amount">$${item.amount.toLocaleString()}</span>`;
+                li.addEventListener('click', () => openFinancialItemModal(type, item.id));
+                ul.appendChild(li);
+            });
+            column.querySelector('.add-financial-btn').addEventListener('click', () => openFinancialItemModal(type));
+        }
     }
 
     page.querySelector('#backBtn').addEventListener('click', (e) => {
@@ -1251,6 +1306,169 @@ function renderFinancialsPage() {
 
     applyTranslations(page);
 }
+
+
+/*****************************************************************
+ * * WISHLIST PAGE
+ * *****************************************************************/
+
+function renderWishlistPage() {
+    const page = document.getElementById("wishlistPage");
+    if (!page) return;
+
+    page.innerHTML = `
+        <div class="page-header">
+            <h2 class="breadcrumb">
+                <a href="#" id="backBtn"><i class="fas fa-arrow-left"></i> <span data-i18n="nav_life_resources"></span></a> / <span data-i18n="title_wishlist"></span>
+            </h2>
+        </div>
+        <div id="wishlistContent" class="roles-grid"></div>
+    `;
+
+    page.querySelector('#backBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        showPage(currentPageOrigin || 'lifeResourcesPage');
+    });
+
+    const contentDiv = page.querySelector("#wishlistContent");
+    const { userRoles } = dimensionLibraryData.appSettings;
+
+    if (!dimensionLibraryData.wishlist) {
+        dimensionLibraryData.wishlist = [];
+    }
+
+    userRoles.forEach(role => {
+        const wishesForRole = dimensionLibraryData.wishlist
+            .map((wish, index) => ({...wish, originalIndex: index}))
+            .filter(wish => wish.roleKey === role.key);
+        const roleCard = createWishlistCard(role, wishesForRole);
+        contentDiv.appendChild(roleCard);
+    });
+
+    applyTranslations(page);
+}
+
+
+function createWishlistCard(role, wishes) {
+    const card = document.createElement('div');
+    card.className = 'wish-card';
+
+    let wishesHtml = '<ul class="wish-list">';
+    if (wishes.length > 0) {
+        wishes.forEach(wish => {
+            wishesHtml += `
+                <li class="wish-item" data-wish-index="${wish.originalIndex}">
+                    <div>${wish.name} (${getTranslation('wish_cat_' + wish.category.toLowerCase())})</div>
+                    <div class="wish-details">
+                        <span>${getTranslation('label_importance')}: ${getTranslation('importance_' + wish.importance.toLowerCase())}</span>
+                        <span>${getTranslation('label_estimated_cost')}: $${wish.cost.toLocaleString()}</span>
+                    </div>
+                </li>
+            `;
+        });
+    } else {
+        wishesHtml += `<li class="no-items">${getTranslation('no_wishes_role')}</li>`;
+    }
+    wishesHtml += '</ul>';
+
+    card.innerHTML = `
+        <div class="skill-header">
+            <h3><i class="fas ${role.icon}"></i> ${getTranslation(role.key)}</h3>
+            <button class="btn primary-btn add-wish-btn" data-role-key="${role.key}"><i class="fas fa-plus"></i> <span data-i18n="btn_add_wish"></span></button>
+        </div>
+        ${wishesHtml}
+    `;
+
+    card.querySelector('.add-wish-btn').addEventListener('click', (e) => {
+        const roleKey = e.currentTarget.dataset.roleKey;
+        openWishlistModal({ roleKey: roleKey });
+    });
+
+    card.querySelectorAll('.wish-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            const wishIndex = parseInt(e.currentTarget.dataset.wishIndex, 10);
+            openWishlistModal({ index: wishIndex });
+        });
+    });
+
+    return card;
+}
+
+
+function openWishlistModal(context) {
+    const { roleKey, index } = context;
+    editingWishlistItemInfo = { roleKey, index };
+
+    const modal = document.getElementById('wishlistItemModal');
+    const title = document.getElementById('wishlistItemModalTitle');
+    const deleteBtn = document.getElementById('deleteWishlistItemBtn');
+
+    if (index !== undefined && index !== null) {
+        const item = dimensionLibraryData.wishlist[index];
+        editingWishlistItemInfo.roleKey = item.roleKey;
+        title.textContent = getTranslation("title_edit_wish");
+        document.getElementById('wishlistItemNameInput').value = item.name;
+        document.getElementById('wishlistItemCategoryInput').value = item.category;
+        document.getElementById('wishlistItemCostInput').value = item.cost;
+        document.getElementById('wishlistItemImportanceInput').value = item.importance;
+        deleteBtn.style.display = 'inline-block';
+    } else {
+        title.textContent = getTranslation("title_add_new_wish");
+        document.getElementById('wishlistItemNameInput').value = '';
+        document.getElementById('wishlistItemCategoryInput').value = 'Object';
+        document.getElementById('wishlistItemCostInput').value = '';
+        document.getElementById('wishlistItemImportanceInput').value = 'Medium';
+        deleteBtn.style.display = 'none';
+    }
+
+    modal.style.display = 'flex';
+}
+
+function closeWishlistModal() {
+    document.getElementById('wishlistItemModal').style.display = 'none';
+}
+
+function saveWishlistItem() {
+    const { roleKey, index } = editingWishlistItemInfo;
+    const wishData = {
+        roleKey: roleKey,
+        name: document.getElementById('wishlistItemNameInput').value,
+        category: document.getElementById('wishlistItemCategoryInput').value,
+        cost: parseFloat(document.getElementById('wishlistItemCostInput').value) || 0,
+        importance: document.getElementById('wishlistItemImportanceInput').value,
+        id: `wish_${new Date().getTime()}`
+    };
+
+    if (!wishData.name) {
+        alert('Please enter a name for the wish.');
+        return;
+    }
+
+    if (index !== undefined && index !== null) {
+        wishData.id = dimensionLibraryData.wishlist[index].id;
+        dimensionLibraryData.wishlist[index] = wishData;
+    } else {
+        if (!dimensionLibraryData.wishlist) dimensionLibraryData.wishlist = [];
+        dimensionLibraryData.wishlist.push(wishData);
+    }
+
+    saveToLocalStorage();
+    renderWishlistPage();
+    closeWishlistModal();
+}
+
+function deleteWishlistItem() {
+    const { index } = editingWishlistItemInfo;
+    if (index !== undefined && index !== null) {
+        if (confirm(getTranslation('confirm_delete'))) {
+            dimensionLibraryData.wishlist.splice(index, 1);
+            saveToLocalStorage();
+            renderWishlistPage();
+            closeWishlistModal();
+        }
+    }
+}
+
 
 /*****************************************************************
  * * CONTEXT MENUS & CUSTOM SELECTS
@@ -1292,10 +1510,10 @@ function initializeAllCustomSelects() {
         createCustomSelect(container, roleOptions, { placeholder: getTranslation('ph_life_roles'), isMultiSelect: true });
     });
 
-    const importanceOptions = [ 
-        { value: 'High', text: getTranslation('importance_high') }, 
-        { value: 'Medium', text: getTranslation('importance_medium') }, 
-        { value: 'Low', text: getTranslation('importance_low') } 
+    const importanceOptions = [
+        { value: 'High', text: getTranslation('importance_high') },
+        { value: 'Medium', text: getTranslation('importance_medium') },
+        { value: 'Low', text: getTranslation('importance_low') }
     ];
     document.querySelectorAll('[id*="ImportanceContainer"]').forEach(container => {
         createCustomSelect(container, importanceOptions, { placeholder: getTranslation('ph_importance'), initialValue: 'Medium' });
@@ -1378,11 +1596,14 @@ function renderItemDetailPage(context) {
     if (item.importance !== undefined) {
         formHtml += `<label><span>${getTranslation('label_importance')}</span><div class="custom-select-container" id="detailImportanceContainer"></div></label>`;
     }
-    if (item.lifeRoles !== undefined) {
-        formHtml += `<label><span>${getTranslation('ph_life_roles')}</span><div class="custom-select-container" id="detailLifeRolesContainer"></div></label>`;
+    if (item.goalAssociation !== undefined) {
+        formHtml += `<label><span>${getTranslation('ph_select_goal')}</span><div class="custom-select-container" id="detailGoalContainer"></div></label>`;
     }
     if (item.associatedSkills !== undefined) {
         formHtml += `<label><span>${getTranslation('ph_associated_skills')}</span><div class="custom-select-container" id="detailSkillsContainer"></div></label>`;
+    }
+    if (item.lifeRoles !== undefined) {
+        formHtml += `<label><span>${getTranslation('ph_life_roles')}</span><div class="custom-select-container" id="detailLifeRolesContainer"></div></label>`;
     }
     if (item.compliance !== undefined) {
         formHtml += `<label><span>${getTranslation('label_compliance')}</span><div class="custom-select-container" id="detailComplianceContainer"></div></label>`;
@@ -1404,6 +1625,11 @@ function renderItemDetailPage(context) {
     if (item.lifeRoles !== undefined) {
         const roleOptions = dimensionLibraryData.appSettings.userRoles.map(r => ({ value: r.key, text: getTranslation(r.key) }));
         createCustomSelect(document.getElementById('detailLifeRolesContainer'), roleOptions, { placeholder: getTranslation('ph_life_roles'), isMultiSelect: true, initialValue: item.lifeRoles });
+    }
+    if (item.goalAssociation !== undefined) {
+        const goals = dimensionLibraryData[dimension]?.goals || [];
+        const goalOptions = [{ value: '', text: 'None' }, ...goals.map((g, idx) => ({ value: idx.toString(), text: g.name }))];
+        createCustomSelect(document.getElementById('detailGoalContainer'), goalOptions, { placeholder: getTranslation('ph_select_goal'), initialValue: item.goalAssociation });
     }
     if (item.associatedSkills !== undefined) {
         const skillOptions = (dimensionLibraryData.skills || []).map((skill, index) => ({ value: index.toString(), text: skill.name }));
@@ -1443,6 +1669,9 @@ function saveItemDetail() {
     }
     if (item.lifeRoles !== undefined) {
         item.lifeRoles = getCustomSelectValue('detailLifeRolesContainer');
+    }
+    if (item.goalAssociation !== undefined) {
+        item.goalAssociation = getCustomSelectValue('detailGoalContainer');
     }
     if (item.associatedSkills !== undefined) {
         item.associatedSkills = getCustomSelectValue('detailSkillsContainer');
@@ -1589,17 +1818,22 @@ function openFinancialItemModal(type, id = null) {
     const dateInput = document.getElementById('financialDateInput');
 
     editingFinancialInfo = { type, id };
-    const typeName = type.slice(0, -1);
+    
+    let typeNameForButton;
+    if (type === 'monthlyIncomes') typeNameForButton = 'monthlyIncome';
+    else if (type === 'monthlyExpenses') typeNameForButton = 'monthlyExpense';
+    else typeNameForButton = type.slice(0, -1);
 
     if (id) {
         const item = dimensionLibraryData.financials[type].find(i => i.id === id);
-        title.textContent = `${getTranslation('title_edit')} ${getTranslation(typeName)}`;
+        let typeNameForTitle = typeNameForButton.replace(/([A-Z])/g, ' $1');
+        title.textContent = `${getTranslation('title_edit')} ${typeNameForTitle}`;
         nameInput.value = item.name;
         amountInput.value = item.amount;
         dateInput.value = item.date;
         deleteBtn.style.display = 'inline-block';
     } else {
-        title.textContent = `${getTranslation('title_add_new')} ${getTranslation(typeName)}`;
+        title.textContent = getTranslation('btn_add_' + typeNameForButton);
         nameInput.value = '';
         amountInput.value = '';
         dateInput.value = new Date().toISOString().split('T')[0];
@@ -1654,7 +1888,7 @@ function deleteFinancialItem() {
 /*****************************************************************
  * * CHART & LIFE QUALITY CALCULATIONS
  * *****************************************************************/
-const chart = new Chart(document.getElementById("radarChart").getContext("2d"), { type: "radar", data: { labels: dimensions.map(d => d.name), datasets: [{ label: "Dimension Score (%)", data: dimensions.map(() => 0), backgroundColor: "rgba(0, 170, 255, 0.2)", borderColor: "rgba(0, 170, 255, 1)", borderWidth: 2, pointBackgroundColor: "rgba(0, 170, 255, 1)" }] }, options: { responsive: true, maintainAspectRatio: false, onClick: (evt, elems) => { if (elems.length > 0) { currentDimension = dimensions[elems[0].index].name; showDimensionInputs(currentDimension); updateNavActive(currentDimension); renderLibrary(currentDimension, currentTab); } }, plugins: { legend: { display: false }, dragData: { round: 0, onDrag: (e, d, i, v) => { inputs[dimensions[i].name].value = v; updateLifeQuality(); showDimensionInputs(dimensions[i].name); } } }, scales: { r: { min: 0, max: 100, ticks: { display: false }, grid: { color: "rgba(255, 255, 255, 0.1)" }, angleLines: { color: "rgba(255, 255, 255, 0.1)" }, pointLabels: { color: "#e0e0e0", font: { size: 12 } } } } } });
+const chart = new Chart(document.getElementById("radarChart").getContext("2d"), { type: "radar", data: { labels: dimensions.map(d => d.name), datasets: [{ label: "Dimension Score (%)", data: dimensions.map(() => 0), backgroundColor: "rgba(0, 170, 255, 0.2)", borderColor: "rgba(0, 170, 255, 1)", borderWidth: 2, pointBackgroundColor: "rgba(0, 170, 255, 1)" }] }, options: { responsive: true, maintainAspectRatio: false, onClick: (evt, elems) => { if (elems.length > 0) { const dim = dimensions[elems[0].index]; currentDimension = dim.name; document.getElementById("selectedDimensionTitle").textContent = getTranslation(dim.key); showDimensionInputs(currentDimension); updateNavActive(currentDimension); renderLibrary(currentDimension, currentTab); } }, plugins: { legend: { display: false }, dragData: { round: 0, onDrag: (e, d, i, v) => { inputs[dimensions[i].name].value = v; updateLifeQuality(); showDimensionInputs(dimensions[i].name); } } }, scales: { r: { min: 0, max: 100, ticks: { display: false }, grid: { color: "rgba(255, 255, 255, 0.1)" }, angleLines: { color: "rgba(255, 255, 255, 0.1)" }, pointLabels: { color: "#e0e0e0", font: { size: 12 } } } } } });
 function updateLifeQuality() { let totalObtained = 0; dimensions.forEach(dim => { totalObtained += (parseFloat(inputs[dim.name].value) || 0) / 100 * dim.max; }); const lifeQuality = totalObtained; document.getElementById("lifeQualityText").textContent = `Life Quality: ${lifeQuality.toFixed(1)}%`; const progressBar = document.getElementById("progressBar"); progressBar.style.width = `${lifeQuality}%`; const color = getColor(lifeQuality); progressBar.style.background = color; updateChart(color, lifeQuality); }
 function updateChart(color, lifeQuality) { chart.data.datasets[0].data = dimensions.map(dim => parseFloat(inputs[dim.name].value) || 0); chart.data.datasets[0].borderColor = color; chart.data.datasets[0].pointBackgroundColor = color; chart.data.datasets[0].backgroundColor = color.replace(')', ', 0.2)').replace('rgb', 'rgba'); chart.update(); }
 function getColor(value) { if (value >= 70) return "rgb(76, 175, 80)"; if (value >= 40) return "rgb(255, 152, 0)"; return "rgb(244, 67, 54)"; }
@@ -1699,7 +1933,7 @@ function migrateRoleData(data) {
     const roleNameToKeyMap = Object.fromEntries(userRoles.map(r => [r.name, r.key]));
 
     for (const dimName in data.libraryData) {
-        if (typeof data.libraryData[dimName] !== 'object' || ['appSettings', 'resources', 'financials'].includes(dimName)) continue;
+        if (typeof data.libraryData[dimName] !== 'object' || ['appSettings', 'resources', 'financials', 'skills', 'wishlist'].includes(dimName)) continue;
 
         const dim = data.libraryData[dimName];
         const processLifeRoles = (item) => {
@@ -1745,10 +1979,11 @@ function loadFromLocalStorage() {
     const loadedLibrary = parsed.libraryData || {};
     if (!loadedLibrary.resources) loadedLibrary.resources = [];
     if (!loadedLibrary.skills) loadedLibrary.skills = [];
+    if (!loadedLibrary.wishlist) loadedLibrary.wishlist = [];
     if (!loadedLibrary.financials) {
-        loadedLibrary.financials = { incomes: [], expenses: [], savings: [], investments: [], debts: [] };
+        loadedLibrary.financials = { incomes: [], expenses: [], savings: [], investments: [], debts: [], monthlyIncomes: [], monthlyExpenses: [] };
     }
-    const financialKeys = ['incomes', 'expenses', 'savings', 'investments', 'debts'];
+    const financialKeys = ['incomes', 'expenses', 'savings', 'investments', 'debts', 'monthlyIncomes', 'monthlyExpenses'];
     financialKeys.forEach(key => {
         if (!loadedLibrary.financials[key]) {
             loadedLibrary.financials[key] = [];

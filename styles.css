@@ -896,3 +896,41 @@ input:checked + .slider:before { transform: translateX(26px); }
 .resize-handle.top-right { top: -9px; right: -9px; cursor: nesw-resize; }
 .resize-handle.bottom-left { bottom: -9px; left: -9px; cursor: nesw-resize; }
 .resize-handle.bottom-right { bottom: -9px; right: -9px; cursor: nwse-resize; }
+/* (Add this at the end of your styles.css file) */
+
+/* ---------------------------- */
+/* WISHLIST PAGE                */
+/* ---------------------------- */
+.wish-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.wish-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.wish-item {
+    background: var(--bg-tertiary);
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.wish-item:hover {
+    transform: translateY(-2px);
+    background-color: var(--border-color);
+}
+
+.wish-details {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
