@@ -64,8 +64,7 @@ const defaultAppData = {
             { key: "student", name: "Student", icon: "fa-graduation-cap" }, { key: "teacher", name: "Teacher", icon: "fa-school" }, { key: "traveler", name: "Traveler", icon: "fa-plane" },
             { key: "visionary", name: "Visionary", icon: "fa-eye" }, { key: "volunteer", name: "Volunteer", icon: "fa-hands-helping" }, { key: "warrior", name: "Warrior", icon: "fa-shield-alt" },
             { key: "writer", name: "Writer", icon: "fa-pen" }, { key: "multimedia_artist", name: "Multimedia Artist", icon: "fa-layer-group" }
-        ],
-        hasCompletedDiagnostic: false
+        ]
     },
     Health: { challenges: [], goals: [], projects: [], routines: { daily: [], weekly: [], monthly: [] }},
     Family: { challenges: [], goals: [], projects: [], routines: { daily: [], weekly: [], monthly: [] }},
@@ -97,45 +96,43 @@ document.addEventListener("DOMContentLoaded", () => {
     setupTabSwitching();
     setupAddButtons();
     setupVisualizationPage();
-    
-    // Main App Initialization
     loadFromLocalStorage();
-    
-    // Check if diagnostic needs to run
-    if (!dimensionLibraryData.appSettings.hasCompletedDiagnostic) {
-        setupDiagnosticForm();
-    }
-    
     setupTopNav();
     setupOptions();
     setupManageRolesPage();
     setupLibrarySort();
-    setupDataHandlers();
+    setupDataHandlers(); 
 
     document.getElementById("saveDataBtn").addEventListener("click", saveToLocalStorage);
 
-    // Other event listeners...
     document.getElementById("profileBtn").addEventListener("click", openProfileModal);
     document.getElementById("saveProfileBtn").addEventListener("click", saveProfile);
     document.getElementById("cancelProfileBtn").addEventListener("click", closeProfileModal);
     document.getElementById("profileImageInput").addEventListener("change", previewProfileImage);
+
     document.getElementById("saveResourceBtn").addEventListener("click", saveResource);
     document.getElementById("cancelResourceBtn").addEventListener("click", closeResourceModal);
     document.getElementById("deleteResourceBtn").addEventListener("click", deleteResource);
     document.getElementById("resourceImageInput").addEventListener("change", previewResourceImage);
+
     document.getElementById("saveFinancialItemBtn").addEventListener("click", saveFinancialItem);
     document.getElementById("deleteFinancialItemBtn").addEventListener("click", deleteFinancialItem);
     document.getElementById("cancelFinancialItemBtn").addEventListener("click", closeFinancialItemModal);
+
     document.getElementById('saveItemDetailBtn').addEventListener('click', saveItemDetail);
+
     document.getElementById('saveSkillBtn').addEventListener('click', saveSkill);
     document.getElementById('cancelSkillBtn').addEventListener('click', closeSkillModal);
     document.getElementById('deleteSkillBtn').addEventListener('click', deleteSkill);
+
     document.getElementById('saveWishlistItemBtn').addEventListener('click', saveWishlistItem);
     document.getElementById('cancelWishlistItemBtn').addEventListener('click', closeWishlistModal);
     document.getElementById('deleteWishlistItemBtn').addEventListener('click', deleteWishlistItem);
+
     document.getElementById('saveMissionBtn').addEventListener('click', saveMission);
     document.getElementById('cancelMissionBtn').addEventListener('click', closeMissionModal);
     document.getElementById('deleteMissionBtn').addEventListener('click', deleteMission);
+
     document.body.addEventListener('click', handleGlobalClick);
 
     if (typeof Sortable === 'undefined') {
@@ -2086,162 +2083,6 @@ const chart = new Chart(document.getElementById("radarChart").getContext("2d"), 
 function updateLifeQuality() { let totalObtained = 0; dimensions.forEach(dim => { totalObtained += (parseFloat(inputs[dim.name].value) || 0) / 100 * dim.max; }); const lifeQuality = totalObtained; document.getElementById("lifeQualityText").textContent = `Life Quality: ${lifeQuality.toFixed(1)}%`; const progressBar = document.getElementById("progressBar"); progressBar.style.width = `${lifeQuality}%`; const color = getColor(lifeQuality); progressBar.style.background = color; updateChart(color, lifeQuality); }
 function updateChart(color, lifeQuality) { chart.data.datasets[0].data = dimensions.map(dim => parseFloat(inputs[dim.name].value) || 0); chart.data.datasets[0].borderColor = color; chart.data.datasets[0].pointBackgroundColor = color; chart.data.datasets[0].backgroundColor = color.replace(')', ', 0.2)').replace('rgb', 'rgba'); chart.update(); }
 function getColor(value) { if (value >= 70) return "rgb(76, 175, 80)"; if (value >= 40) return "rgb(255, 152, 0)"; return "rgb(244, 67, 54)"; }
-
-/*****************************************************************
- * * DIAGNOSTIC FORM
- * *****************************************************************/
-function setupDiagnosticForm() {
-    const modal = document.getElementById('diagnosticModal');
-    const content = modal.querySelector('.diagnostic-content');
-    const backBtn = document.getElementById('diagnosticBackBtn');
-    const nextBtn = document.getElementById('diagnosticNextBtn');
-    const finishBtn = document.getElementById('diagnosticFinishBtn');
-    const progressBar = modal.querySelector('.diagnostic-progress-bar');
-    
-    let currentStep = 0;
-    const totalSteps = dimensions.length + 1; // 1 welcome screen + 8 dimensions
-    const diagnosticData = {}; // To store user input
-
-    // Generate the dimension steps
-    dimensions.forEach((dim, index) => {
-        const stepIndex = index + 1;
-        const stepDiv = document.createElement('div');
-        stepDiv.className = 'diagnostic-step';
-        stepDiv.dataset.step = stepIndex;
-        stepDiv.dataset.dimension = dim.name;
-
-        stepDiv.innerHTML = `
-            <h2>${dim.name}</h2>
-            <div class="dimension-rating-container">
-                <label for="diagnosticScore">Rate your ${dim.name}</label>
-                <input type="range" id="diagnosticScore" min="0" max="100" value="50" class="dimension-score">
-                <span id="diagnosticScoreOutput">50%</span>
-            </div>
-            <label for="diagnosticText">Describe your current challenges and goals in this area:</label>
-            <textarea id="diagnosticText" placeholder="e.g., I want to lose 10 pounds and feel more energetic. I struggle with finding time to cook healthy meals."></textarea>
-        `;
-        content.insertBefore(stepDiv, modal.querySelector('.diagnostic-nav'));
-    });
-
-    // Add live feedback for the slider
-    content.addEventListener('input', e => {
-        if (e.target.type === 'range') {
-            const output = e.target.parentElement.querySelector('#diagnosticScoreOutput');
-            output.textContent = `${e.target.value}%`;
-        }
-    });
-
-    const updateStep = () => {
-        modal.querySelectorAll('.diagnostic-step').forEach(step => {
-            step.classList.remove('active');
-        });
-        modal.querySelector(`.diagnostic-step[data-step="${currentStep}"]`).classList.add('active');
-
-        // Update progress bar
-        progressBar.style.width = `${(currentStep / (totalSteps -1)) * 100}%`;
-
-        // Update button visibility
-        backBtn.style.display = currentStep > 0 ? 'inline-flex' : 'none';
-        nextBtn.style.display = currentStep < totalSteps - 1 ? 'inline-flex' : 'none';
-        finishBtn.style.display = currentStep === totalSteps - 1 ? 'inline-flex' : 'none';
-
-    };
-
-    const collectStepData = (step) => {
-        const stepElement = modal.querySelector(`.diagnostic-step[data-step="${step}"]`);
-        if(!stepElement || step === 0) return;
-        
-        const dimensionName = stepElement.dataset.dimension;
-        const score = stepElement.querySelector('.dimension-score').value;
-        const text = stepElement.querySelector('textarea').value;
-        
-        diagnosticData[dimensionName] = { score, text };
-    };
-
-    nextBtn.addEventListener('click', () => {
-        if (currentStep < totalSteps - 1) {
-            collectStepData(currentStep);
-            currentStep++;
-            updateStep();
-        }
-    });
-    
-    backBtn.addEventListener('click', () => {
-        if (currentStep > 0) {
-            collectStepData(currentStep);
-            currentStep--;
-            updateStep();
-        }
-    });
-    
-    finishBtn.addEventListener('click', async () => {
-        collectStepData(currentStep);
-        
-        // --- START: NEW AI PROCESSING LOGIC ---
-        finishBtn.textContent = 'Processing...';
-        finishBtn.disabled = true;
-        backBtn.disabled = true;
-    
-        for (const dimName in diagnosticData) {
-            const { score, text } = diagnosticData[dimName];
-            
-            // Apply the user's score immediately
-            if(inputs[dimName]) {
-                inputs[dimName].value = score;
-            }
-    
-            // If the user provided text, send it to the AI
-            if (text && text.trim().length > 10) {
-                try {
-                    const response = await fetch('/.netlify/functions/process-diagnostic', {
-                        method: 'POST',
-                        body: JSON.stringify({ dimensionName: dimName, userText: text }),
-                    });
-    
-                    if (!response.ok) {
-                        throw new Error(`AI processing failed for ${dimName}`);
-                    }
-    
-                    const aiSuggestions = await response.json();
-    
-                    // Populate the app's data with the AI suggestions
-                    if(aiSuggestions.challenges) dimensionLibraryData[dimName].challenges.push(...aiSuggestions.challenges);
-                    if(aiSuggestions.goals) dimensionLibraryData[dimName].goals.push(...aiSuggestions.goals);
-                    if(aiSuggestions.projects) dimensionLibraryData[dimName].projects.push(...aiSuggestions.projects);
-                    if(aiSuggestions.routines) {
-                        aiSuggestions.routines.forEach(routine => {
-                            const freq = routine.frequency || 'daily'; // Default to daily if not specified
-                            if (dimensionLibraryData[dimName].routines[freq]) {
-                                dimensionLibraryData[dimName].routines[freq].push(routine);
-                            }
-                        });
-                    }
-                    
-                } catch (error) {
-                    console.error(`Could not process dimension ${dimName}:`, error);
-                    // Continue to the next dimension even if one fails
-                }
-            }
-        }
-        
-        // --- END: NEW AI PROCESSING LOGIC ---
-    
-        updateLifeQuality();
-        
-        dimensionLibraryData.appSettings.hasCompletedDiagnostic = true;
-        saveToLocalStorage(false);
-    
-        alert("Setup complete! We've added some starting points based on your input.");
-        
-        modal.style.display = 'none';
-        initializeDashboard(); // Re-render the dashboard to show new items
-    });
-    
-    // Show the modal and initialize the first step
-    modal.style.display = 'flex';
-    updateStep();
-}
-
 
 /*****************************************************************
  * * LOCAL STORAGE & DATA MIGRATION
