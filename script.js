@@ -27,6 +27,8 @@ let editingMissionInfo = {
     id: null
 };
 
+// New state for sorting within library tabs
+let currentSort = 'default'; // 'default', 'name', 'importance', 'custom'
 
 // DOM Element References
 const inputsDiv = document.getElementById("inputs");
@@ -95,6 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupTopNav();
     setupOptions();
     setupManageRolesPage();
+    setupLibrarySort();
 
     document.getElementById("saveDataBtn").addEventListener("click", saveToLocalStorage);
 
@@ -127,6 +130,17 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('deleteMissionBtn').addEventListener('click', deleteMission);
 
     document.body.addEventListener('click', handleGlobalClick);
+
+    // Load Sortable.js if not already loaded
+    if (typeof Sortable === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js';
+        script.onload = () => {
+            console.log("Sortable.js loaded!");
+            renderLibrary(currentDimension, currentTab);
+        };
+        document.head.appendChild(script);
+    }
 });
 
 function initializeDashboard() {
@@ -153,7 +167,9 @@ function handleGlobalClick(event) {
 
     const openModal = document.querySelector('.modal-overlay[style*="display: flex"]');
     if (openModal && event.target === openModal) {
-        openModal.style.display = 'none';
+        if (event.target === openModal) {
+            openModal.style.display = 'none';
+        }
     }
 }
 
@@ -161,6 +177,12 @@ function showPage(pageId, context = {}) {
     document.querySelectorAll(".page").forEach(page => page.style.display = "none");
     const targetPage = document.getElementById(pageId);
     if(targetPage) targetPage.style.display = "block";
+
+    if (['lifeVisualizationPage', 'lifeBalancePage', 'lifeRolesPage', 'lifeSkillsPage', 'lifeResourcesPage', 'todayPage', 'wishlistPage'].includes(pageId)) {
+        currentPageOrigin = pageId;
+    } else if (context.originPage) {
+        currentPageOrigin = context.originPage;
+    }
 
     switch (pageId) {
         case 'todayPage': renderTodayPage(); break;
@@ -258,7 +280,7 @@ const translations = {
         engineer: "Engineer", entrepreneur: "Entrepreneur", explorer: "Explorer", father: "Father", friend: "Friend", gardener: "Gardener", healer: "Healer", human: "Human",
         innovator: "Innovator", leader: "Leader", learner: "Learner", lover: "Lover", manager: "Manager", mentor: "Mentor", mother: "Mother", musician: "Musician",
         partner: "Partner", philosopher: "Philosopher", producer: "Producer", professional: "Professional", scientist: "Scientist", sister: "Sister", son: "Son",
-        spiritualist: "Spiritualist", student: "Student", teacher: "Teacher", traveler: "Traveler", visionary: "Visionary", volunteer: "Volunteer",
+        spiritualist: "Spiritual", student: "Student", teacher: "Teacher", traveler: "Traveler", visionary: "Visionary", volunteer: "Volunteer",
         warrior: "Warrior", writer: "Writer", multimedia_artist: "Multimedia Artist",
         no_items_role: "No items for this role.", no_skills_role: "No skills for this role yet.", no_items_category: "No items in this category yet. Click 'Add Item' to start.",
         confirm_delete: "Are you sure you want to delete this item?",
@@ -268,6 +290,7 @@ const translations = {
         no_wishes_role: "No wishes for this role yet.", label_wish_category: "Category", label_estimated_cost: "Est. Cost ($)", wish_cat_object: "Object", wish_cat_travel: "Travel", wish_cat_course: "Course",
         primary_missions: "Primary Missions", secondary_missions: "Secondary Missions", btn_add_mission: "Add Mission", title_add_mission: "Add Mission", title_edit_mission: "Edit Mission", label_mission_name: "Mission Name", label_completion_date: "Completion Date",
         today_daily_routines: "Daily Routines", today_primary_missions: "Primary Missions for Today", today_secondary_missions: "Secondary Missions for Today", no_routines_today: "No daily routines found.", no_missions_today: "No missions scheduled for today.",
+        sort_by_name: "Sort by Name", sort_by_importance: "Sort by Importance", sort_by_custom: "Custom Order", sort_default: "Default",
     },
     es: {
         nav_life_visualization: "Visualización", nav_life_balance: "Balance de Vida", nav_life_roles: "Roles de Vida", nav_life_skills: "Habilidades de Vida", nav_life_resources: "Recursos de Vida", nav_options: "Opciones", nav_today: "Hoy",
@@ -303,6 +326,7 @@ const translations = {
         no_wishes_role: "Aún no hay deseos para este rol.", label_wish_category: "Categoría", label_estimated_cost: "Costo Est. ($)", wish_cat_object: "Objeto", wish_cat_travel: "Viaje", wish_cat_course: "Curso",
         primary_missions: "Misiones Primarias", secondary_missions: "Misiones Secundarias", btn_add_mission: "Añadir Misión", title_add_mission: "Añadir Misión", title_edit_mission: "Editar Misión", label_mission_name: "Nombre de la Misión", label_completion_date: "Fecha de Finalización",
         today_daily_routines: "Rutinas Diarias", today_primary_missions: "Misiones Primarias para Hoy", today_secondary_missions: "Misiones Secundarias para Hoy", no_routines_today: "No se encontraron rutinas diarias.", no_missions_today: "No hay misiones programadas para hoy.",
+        sort_by_name: "Ordenar por Nombre", sort_by_importance: "Ordenar por Importancia", sort_by_custom: "Orden Personalizado", sort_default: "Predeterminado",
     }
 };
 
@@ -372,7 +396,7 @@ function updateDynamicText(lang) {
 
     const currentDimObject = dimensions.find(d => d.name === currentDimension);
     if (currentDimObject) {
-        document.getElementById("selectedDimensionTitle").textContent = langDict[currentDimObject.key];
+        document.getElementById("selectedDimensionTitle").textContent = getTranslation(currentDimObject.key);
     }
     updateLifeQuality();
 }
@@ -394,12 +418,7 @@ function setupLeftNav() {
         item.addEventListener("click", function(e) {
             e.preventDefault();
             const targetId = this.getAttribute("data-target");
-            const activePage = document.querySelector('.page[style*="block"]');
-
-            if (!activePage || activePage.id !== targetId) {
-                currentPageOrigin = activePage ? activePage.id : 'lifeBalancePage';
-            }
-
+            
             navItems.forEach(i => i.classList.remove("active"));
             this.classList.add("active");
             showPage(targetId);
@@ -440,9 +459,88 @@ function setupTabSwitching() {
             document.getElementById("tab-" + selectedTab).classList.add("active");
             currentTab = selectedTab;
             renderLibrary(currentDimension, currentTab);
+            toggleSortable(currentSort === 'custom');
         });
     });
 }
+
+function setupLibrarySort() {
+    const librarySection = document.querySelector('#lifeBalancePage .library-section');
+    if (!librarySection) return;
+
+    if (librarySection.querySelector('.sort-icon-container')) {
+        return;
+    }
+
+    const sortIconContainer = document.createElement('div');
+    sortIconContainer.className = 'sort-icon-container';
+    sortIconContainer.innerHTML = `<i class="fas fa-sort menu-icon" id="librarySortIcon" style="position: static;"></i>`;
+    
+    const libraryTabs = librarySection.querySelector('.library-tabs');
+    if (libraryTabs) {
+        libraryTabs.appendChild(sortIconContainer);
+    }
+
+    document.getElementById('librarySortIcon').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const menuActions = [
+            { label: getTranslation('sort_default'), action: () => { currentSort = 'default'; renderLibrary(currentDimension, currentTab); } },
+            { label: getTranslation('sort_by_name'), action: () => { currentSort = 'name'; renderLibrary(currentDimension, currentTab); } },
+            { label: getTranslation('sort_by_importance'), action: () => { currentSort = 'importance'; renderLibrary(currentDimension, currentTab); } },
+            { label: getTranslation('sort_by_custom'), action: () => { currentSort = 'custom'; renderLibrary(currentDimension, currentTab); } }
+        ];
+        showContextMenu(e.target, menuActions);
+    });
+}
+
+
+let sortableInstances = [];
+
+function toggleSortable(enable) {
+    const activeTabContent = document.querySelector('.tab-content.active');
+    if (!activeTabContent) return;
+
+    if (sortableInstances.length > 0) {
+        sortableInstances.forEach(instance => instance.destroy());
+        sortableInstances = [];
+    }
+    document.querySelectorAll('.library-list').forEach(list => {
+        list.classList.remove('sortable-active');
+    });
+
+    if (enable && currentSort === 'custom' && typeof Sortable !== 'undefined') {
+        const listElements = activeTabContent.querySelectorAll('.library-list');
+
+        listElements.forEach(listElement => {
+            listElement.classList.add('sortable-active');
+
+            const instance = Sortable.create(listElement, {
+                animation: 150,
+                onEnd: function (evt) {
+                    const { oldIndex, newIndex, from: listContainer } = evt;
+
+                    let targetArray;
+                    const listId = listContainer.id; 
+                    
+                    if (currentTab === 'routines') {
+                        const frequency = listId.replace('RoutinesList', ''); // daily, weekly, monthly
+                        targetArray = dimensionLibraryData[currentDimension].routines[frequency];
+                    } else {
+                        targetArray = dimensionLibraryData[currentDimension][currentTab];
+                    }
+
+                    if (targetArray && oldIndex !== newIndex) {
+                        const [movedItem] = targetArray.splice(oldIndex, 1);
+                        targetArray.splice(newIndex, 0, movedItem);
+                        saveToLocalStorage(false);
+                    }
+                }
+            });
+            sortableInstances.push(instance);
+        });
+    }
+}
+
 
 /*****************************************************************
  * * UI UPDATE & RENDERING FUNCTIONS
@@ -457,7 +555,18 @@ function renderLibrary(dimension, tab) {
     if (!dimensionLibraryData[dimension]) {
         dimensionLibraryData[dimension] = { challenges: [], goals: [], projects: [], routines: { daily: [], weekly: [], monthly: [] } };
     };
-    const data = dimensionLibraryData[dimension];
+    let data = dimensionLibraryData[dimension];
+
+    const sortItems = (items) => {
+        if (!items) return [];
+        if (currentSort === 'name') {
+            return [...items].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        } else if (currentSort === 'importance') {
+            const importanceOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+            return [...items].sort((a, b) => (importanceOrder[b.importance] || 0) - (importanceOrder[a.importance] || 0));
+        }
+        return [...items];
+    };
 
     const renderItem = (item, index, type, frequency = null) => {
         const rolesHtml = createRolesHtml(item.lifeRoles);
@@ -483,19 +592,20 @@ function renderLibrary(dimension, tab) {
         }
 
         const div = createLibraryItem(type, item.name, rolesHtml, `<div class="card-details">${detailsHtml}</div>`, skillsHtml, complianceHtml);
+        
+        div.dataset.originalIndex = index;
+        if (frequency) {
+            div.dataset.frequency = frequency;
+        }
 
         const context = { dimension, tab: type + 's', index, frequency, originPage: 'lifeBalancePage' };
         
-        div.addEventListener('click', () => {
+        div.addEventListener('click', (e) => {
+            if (e.target.closest('.compliance-toggle-container') || e.target.closest('.menu-icon')) {
+                return;
+            }
             showPage('itemDetailPage', context);
         });
-
-        const toggleContainer = div.querySelector('.compliance-toggle-container');
-        if (toggleContainer) {
-            toggleContainer.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-        }
 
         const complianceToggle = div.querySelector('.compliance-toggle-container input');
         if (complianceToggle) {
@@ -522,16 +632,31 @@ function renderLibrary(dimension, tab) {
         if(document.getElementById(listId)) document.getElementById(listId).appendChild(div);
     };
 
-    data.challenges?.forEach((item, index) => renderItem(item, index, "challenge"));
-    data.goals?.forEach((item, index) => renderItem(item, index, "goal"));
-    data.projects?.forEach((item, index) => renderItem(item, index, "project"));
-    if (data.routines) {
+    if (tab === 'challenges') {
+        sortItems(data.challenges).forEach((item) => {
+            renderItem(item, data.challenges.indexOf(item), "challenge");
+        });
+    } else if (tab === 'goals') {
+        sortItems(data.goals).forEach((item) => {
+            renderItem(item, data.goals.indexOf(item), "goal");
+        });
+    } else if (tab === 'projects') {
+        sortItems(data.projects).forEach((item) => {
+            renderItem(item, data.projects.indexOf(item), "project");
+        });
+    } else if (tab === 'routines' && data.routines) {
         Object.keys(data.routines).forEach(freq => {
-            data.routines[freq]?.forEach((item, index) => renderItem(item, index, "routine", freq));
+            sortItems(data.routines[freq]).forEach((item) => {
+                renderItem(item, data.routines[freq].indexOf(item), "routine", freq);
+            });
         });
     }
+    
     initializeAllCustomSelects();
+    toggleSortable(currentSort === 'custom');
 }
+
+
 
 function createLibraryItem(type, title, roles, details = '', skills = '', compliance = '') {
     const div = document.createElement("div");
@@ -564,7 +689,6 @@ function createLibraryItem(type, title, roles, details = '', skills = '', compli
 
 function setupManageRolesPage() {
     document.getElementById('manageRolesBtn').addEventListener('click', () => {
-        currentPageOrigin = 'lifeRolesPage';
         showPage('manageRolesPage');
     });
 
@@ -683,11 +807,9 @@ function renderLifeRolesPage() {
     const pageContainer = document.getElementById("lifeRolesPage");
     if (!contentDiv || !pageContainer) return;
 
-    // Remove old filter bar to prevent duplication on re-render
     const oldFilterBar = document.getElementById('lifeRolesFilterBar');
     if (oldFilterBar) oldFilterBar.remove();
 
-    // Create and insert the new global filter bar
     const filterBar = document.createElement('div');
     filterBar.id = 'lifeRolesFilterBar';
     filterBar.className = 'global-filter-bar';
@@ -700,11 +822,10 @@ function renderLifeRolesPage() {
     pageContainer.querySelector('.page-header').insertAdjacentElement('afterend', filterBar);
     applyTranslations(filterBar);
 
-    // Add event listeners to the new filter buttons
     filterBar.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', () => {
             lifeRolesGlobalFilter = btn.dataset.filter;
-            renderLifeRolesPage(); // Re-render the page with the new global filter
+            renderLifeRolesPage();
         });
     });
 
@@ -721,9 +842,8 @@ function renderLifeRolesPage() {
         const dim = dimensionLibraryData[dimName];
 
         const processItem = (item, index, category, tab, frequency) => {
-            // Apply the global filter first
             if (lifeRolesGlobalFilter !== 'all' && category !== lifeRolesGlobalFilter) {
-                return; // Skip item if it doesn't match
+                return;
             }
 
             if (item.lifeRoles && Array.isArray(item.lifeRoles)) {
@@ -766,17 +886,17 @@ function createRoleCard(role, itemsForRole) {
 
     let processedItems = [...itemsForRole];
 
-    // Per-card filter
     if (state.filter !== 'all') {
         processedItems = processedItems.filter(item => item.category === state.filter);
     }
 
-    // Per-card sort
     const importanceMap = { High: 3, Medium: 2, Low: 1, default: 0 };
     if (state.sort === 'dueDate') {
         processedItems.sort((a, b) => (new Date(a.dueDate) || 0) - (new Date(b.dueDate) || 0));
     } else if (state.sort === 'importance') {
         processedItems.sort((a, b) => (importanceMap[b.importance] || importanceMap.default) - (importanceMap[a.importance] || importanceMap.default));
+    } else if (state.sort === 'name') {
+        processedItems.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     let itemsHtml = '<ul>';
@@ -830,7 +950,7 @@ function setupRoleCardInteractions(container) {
             let menuItems = [];
             if (action === 'filter') {
                 menuItems = [
-                    { label: 'Show All', action: () => { roleCardState[roleKey].filter = 'all'; renderLifeRolesPage(); } },
+                    { label: getTranslation('tab_all'), action: () => { roleCardState[roleKey].filter = 'all'; renderLifeRolesPage(); } },
                     { label: getTranslation('tab_challenges'), action: () => { roleCardState[roleKey].filter = 'challenge'; renderLifeRolesPage(); } },
                     { label: getTranslation('tab_goals'), action: () => { roleCardState[roleKey].filter = 'goal'; renderLifeRolesPage(); } },
                     { label: getTranslation('tab_projects'), action: () => { roleCardState[roleKey].filter = 'project'; renderLifeRolesPage(); } },
@@ -838,9 +958,9 @@ function setupRoleCardInteractions(container) {
                 ];
             } else if (action === 'sort') {
                 menuItems = [
-                    { label: 'Default', action: () => { roleCardState[roleKey].sort = 'default'; renderLifeRolesPage(); } },
-                    { label: 'By Due Date', action: () => { roleCardState[roleKey].sort = 'dueDate'; renderLifeRolesPage(); } },
-                    { label: 'By Importance', action: () => { roleCardState[roleKey].sort = 'importance'; renderLifeRolesPage(); } }
+                    { label: getTranslation('sort_default'), action: () => { roleCardState[roleKey].sort = 'default'; renderLifeRolesPage(); } },
+                    { label: getTranslation('sort_by_name'), action: () => { roleCardState[roleKey].sort = 'name'; renderLifeRolesPage(); } },
+                    { label: getTranslation('sort_by_importance'), action: () => { roleCardState[roleKey].sort = 'importance'; renderLifeRolesPage(); } },
                 ];
             }
             showContextMenu(e.target, menuItems);
@@ -1003,18 +1123,14 @@ function renderExpandedRolePage(context) {
     }
 
     const page = document.getElementById('expandedRolePage');
-
-    // Set page title
     const titleEl = document.getElementById('expandedRoleTitle');
     titleEl.innerHTML = `<i class="fas ${role.icon}"></i> ${getTranslation(role.key)}`;
 
-    // Set up back button
     document.getElementById('backToRolesFromExpandedLink').onclick = (e) => {
         e.preventDefault();
         showPage('lifeRolesPage');
     };
 
-    // --- Setup tabs ---
     const tabs = page.querySelectorAll('.library-tabs li');
     const tabContents = page.querySelectorAll('.tab-content');
     tabs.forEach(tab => {
@@ -1028,11 +1144,8 @@ function renderExpandedRolePage(context) {
             });
         });
     });
-     // Manually trigger click on the first tab to ensure it's active on render
     tabs[0].click();
 
-
-    // --- Find and render all items for this role ---
     const allItems = { goals: [], challenges: [], projects: [], routines: [] };
     for (const dimName in dimensionLibraryData) {
         if (['appSettings', 'resources', 'financials', 'skills', 'wishlist'].includes(dimName)) continue;
@@ -1058,18 +1171,14 @@ function renderExpandedRolePage(context) {
         .map((skill, index) => ({ ...skill, originalIndex: index }))
         .filter(skill => skill.roleKey === roleKey);
         
-    // --- Render Lists ---
     renderExpandedItemList(allItems.goals, page.querySelector('#expanded-goals-list'), 'goal');
     renderExpandedItemList(allItems.challenges, page.querySelector('#expanded-challenges-list'), 'challenge');
     renderExpandedItemList(allItems.projects, page.querySelector('#expanded-projects-list'), 'project');
     renderExpandedItemList(allItems.routines, page.querySelector('#expanded-routines-list'), 'routine');
     renderExpandedItemList(allSkills, page.querySelector('#expanded-skills-list'), 'skill');
 
-
-    // --- Initialize forms ---
-    initializeAllCustomSelects(); // This will handle all dropdowns on the page
+    initializeAllCustomSelects();
     
-    // --- Setup form submission handlers ---
     document.getElementById('expandedAddGoalBtn').onclick = () => handleExpandedFormSubmit('goal', roleKey);
     document.getElementById('expandedAddChallengeBtn').onclick = () => handleExpandedFormSubmit('challenge', roleKey);
     document.getElementById('expandedAddProjectBtn').onclick = () => handleExpandedFormSubmit('project', roleKey);
@@ -1170,7 +1279,6 @@ function handleExpandedFormSubmit(type, roleKey) {
     feedbackEl.textContent = `"${newItem.name}" has been added!`;
     setTimeout(() => { feedbackEl.textContent = ''; }, 3000);
 
-    // Re-render the page to show the new item in the list and clear forms
     renderExpandedRolePage({ roleKey });
 }
 
@@ -1232,17 +1340,14 @@ function renderLifeResourcesPage() {
 
         if (categoryName === 'Money') {
             card.addEventListener('click', () => {
-                currentPageOrigin = 'lifeResourcesPage';
                 showPage('financialsDetailPage');
             });
         } else if (categoryName === 'Wishlist') {
              card.addEventListener('click', () => {
-                currentPageOrigin = 'lifeResourcesPage';
                 showPage('wishlistPage');
             });
         } else {
             card.addEventListener('click', () => {
-                currentPageOrigin = 'lifeResourcesPage';
                 showPage('resourceCategoryDetailPage', { categoryName: categoryName, translationKey: translationKey });
             });
         }
@@ -1278,7 +1383,7 @@ function renderResourceCategoryPage(context) {
 
     page.querySelector('#backBtn').addEventListener('click', (e) => {
         e.preventDefault();
-        showPage(currentPageOrigin || 'lifeResourcesPage');
+        showPage(currentPageOrigin);
     });
     page.querySelector('#addNewResourceItemBtn').addEventListener('click', () => openResourceModal(null, categoryName));
 
@@ -1350,7 +1455,7 @@ function renderFinancialsPage() {
 
     page.querySelector('#backBtn').addEventListener('click', (e) => {
         e.preventDefault();
-        showPage(currentPageOrigin || 'lifeResourcesPage');
+        showPage(currentPageOrigin);
     });
 
     applyTranslations(page);
@@ -1376,7 +1481,7 @@ function renderWishlistPage() {
 
     page.querySelector('#backBtn').addEventListener('click', (e) => {
         e.preventDefault();
-        showPage(currentPageOrigin || 'lifeResourcesPage');
+        showPage(currentPageOrigin);
     });
 
     const contentDiv = page.querySelector("#wishlistContent");
@@ -1630,7 +1735,6 @@ function createItem(config) {
         itemData[prop] = getCustomSelectValue(config.selects[prop]);
     }
 
-    // Add empty mission arrays for new projects
     if (config.type === 'project') {
         itemData.primaryMissions = [];
         itemData.secondaryMissions = [];
@@ -1641,7 +1745,7 @@ function createItem(config) {
     saveToLocalStorage();
     renderLibrary(currentDimension, currentTab);
 }
-function deleteItem(dimension, tab, index, frequency) { if (confirm(getTranslation('confirm_delete'))) { if (tab === "routines") { dimensionLibraryData[dimension].routines[frequency].splice(index, 1); } else { dimensionLibraryData[dimension][tab].splice(index, 1); } saveToLocalStorage(); renderLibrary(dimension, tab); } }
+function deleteItem(dimension, tab, index, frequency) { if (confirm(getTranslation('confirm_delete'))) { if (tab === "routines") { dimensionLibraryData[dimension].routines[frequency].splice(index, 1); } else { dimensionLibraryData[dimension][tab].splice(index, 1); } saveToLocalStorage(); renderLibrary(dimension, currentTab); } }
 
 function renderItemDetailPage(context) {
     const { dimension, tab, index, frequency, originPage } = context;
@@ -1691,7 +1795,6 @@ function renderItemDetailPage(context) {
     titleEl.textContent = `Edit ${item.name}`;
     formContainer.innerHTML = formHtml;
     
-    // Clear old missions container if it exists
     const oldMissionsContainer = page.querySelector('.missions-container');
     if(oldMissionsContainer) oldMissionsContainer.remove();
 
@@ -2080,7 +2183,6 @@ function loadFromLocalStorage() {
         loadedLibrary.appSettings = defaultAppData.appSettings;
     }
     
-    // Ensure projects have mission arrays
     Object.values(loadedLibrary).forEach(dim => {
         if(dim && Array.isArray(dim.projects)) {
             dim.projects.forEach(proj => {
@@ -2491,7 +2593,7 @@ function openMissionModal(missionType, missionId = null) {
     
     const roleOptions = dimensionLibraryData.appSettings.userRoles.map(r => ({ value: r.key, text: getTranslation(r.key) }));
     
-    if (missionId) { // Editing
+    if (missionId) {
         const project = dimensionLibraryData[editingItem.dimension][editingItem.tab][editingItem.index];
         const mission = project[missionType].find(m => m.id === missionId);
         title.textContent = getTranslation('title_edit_mission');
@@ -2499,7 +2601,7 @@ function openMissionModal(missionType, missionId = null) {
         document.getElementById('missionDateInput').value = mission.completionDate;
         createCustomSelect(document.getElementById('missionRoleContainer'), roleOptions, { placeholder: getTranslation('ph_life_roles'), initialValue: mission.lifeRole });
         deleteBtn.style.display = 'inline-block';
-    } else { // Adding new
+    } else {
         title.textContent = getTranslation('title_add_mission');
         document.getElementById('missionNameInput').value = '';
         document.getElementById('missionDateInput').value = new Date().toISOString().split('T')[0];
@@ -2529,30 +2631,32 @@ function saveMission() {
         return;
     }
 
-    if (id) { // Update existing mission
+    if (id) {
         const missionIndex = project[type].findIndex(m => m.id === id);
         if (missionIndex > -1) {
             project[type][missionIndex] = { ...project[type][missionIndex], ...missionData };
         }
-    } else { // Add new mission
+    } else {
         missionData.id = `mission_${new Date().getTime()}`;
         missionData.completed = false;
         project[type].push(missionData);
     }
     
     saveToLocalStorage();
-    renderItemDetailPage(editingItem);
+    renderItemDetailPage(editingItem); 
     closeMissionModal();
 }
 
-function deleteMission(missionType, missionId) {
+function deleteMission(type, missionId) {
     if (confirm(getTranslation('confirm_delete'))) {
-        const project = dimensionLibraryData[editingItem.dimension][editingItem.tab][editingItem.index];
-        project[missionType] = project[missionType].filter(m => m.id !== missionId);
+        const { dimension, tab, index } = editingItem;
+        const project = dimensionLibraryData[dimension][tab][index];
+        project[type] = project[type].filter(m => m.id !== (missionId || editingMissionInfo.id));
         saveToLocalStorage();
         renderItemDetailPage(editingItem);
     }
 }
+
 
 /*****************************************************************
  * * TODAY PAGE LOGIC
@@ -2602,7 +2706,6 @@ function renderTodayLists() {
     
     [routinesListDiv, primaryMissionsListDiv, secondaryMissionsListDiv].forEach(div => div.innerHTML = '');
 
-    // 1. Get Daily Routines (only show for current day)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (todayPageSelectedDate.getTime() === today.getTime()) {
@@ -2655,7 +2758,6 @@ function renderTodayLists() {
     }
 
 
-    // 2. Get Missions for selected date
     const selectedDateStr = todayPageSelectedDate.toISOString().split('T')[0];
     const primaryMissions = [];
     const secondaryMissions = [];
@@ -2724,10 +2826,8 @@ function createTodayMissionElement(mission) {
         const project = dimensionLibraryData[dimension].projects[projIndex];
         
         let missionToUpdate = project.primaryMissions.find(m => m.id === mission.id);
-        let missionList = 'primaryMissions';
         if (!missionToUpdate) {
             missionToUpdate = project.secondaryMissions.find(m => m.id === mission.id);
-            missionList = 'secondaryMissions';
         }
 
         if (missionToUpdate) {
@@ -2789,7 +2889,7 @@ function renderCalendar(container) {
     });
 
     for (let i = 0; i < startDayOfWeek; i++) {
-        grid.innerHTML += '<div></div>'; // Blank cells for alignment
+        grid.innerHTML += '<div></div>';
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
