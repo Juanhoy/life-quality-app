@@ -2145,11 +2145,6 @@ function setupDiagnosticForm() {
         nextBtn.style.display = currentStep < totalSteps - 1 ? 'inline-flex' : 'none';
         finishBtn.style.display = currentStep === totalSteps - 1 ? 'inline-flex' : 'none';
 
-        if(currentStep === 0) {
-           setTimeout(() => modal.dataset.stepComplete = "true", 500);
-        } else {
-            modal.dataset.stepComplete = "false";
-        }
     };
 
     const collectStepData = (step) => {
