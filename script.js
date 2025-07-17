@@ -6,8 +6,8 @@
 // Default state
 let currentDimension = "Health";
 let currentTab = "goals";
-let lifeRolesGlobalFilter = 'all'; // New global filter for Life Roles page
-let todayPageSelectedDate = new Date(); // New state for Today page calendar
+let lifeRolesGlobalFilter = 'all';
+let todayPageSelectedDate = new Date();
 let roleCardState = {};
 let editingResourceId = null;
 let currentPageOrigin = 'lifeBalancePage';
@@ -29,6 +29,9 @@ let editingMissionInfo = {
 
 // New state for sorting within library tabs
 let currentSort = 'default'; // 'default', 'name', 'importance', 'custom'
+
+// To hold Sortable.js instances
+let sortableInstances = [];
 
 // DOM Element References
 const inputsDiv = document.getElementById("inputs");
@@ -98,6 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupOptions();
     setupManageRolesPage();
     setupLibrarySort();
+    setupDataHandlers(); 
 
     document.getElementById("saveDataBtn").addEventListener("click", saveToLocalStorage);
 
@@ -131,7 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.body.addEventListener('click', handleGlobalClick);
 
-    // Load Sortable.js if not already loaded
     if (typeof Sortable === 'undefined') {
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js';
@@ -291,6 +294,7 @@ const translations = {
         primary_missions: "Primary Missions", secondary_missions: "Secondary Missions", btn_add_mission: "Add Mission", title_add_mission: "Add Mission", title_edit_mission: "Edit Mission", label_mission_name: "Mission Name", label_completion_date: "Completion Date",
         today_daily_routines: "Daily Routines", today_primary_missions: "Primary Missions for Today", today_secondary_missions: "Secondary Missions for Today", no_routines_today: "No daily routines found.", no_missions_today: "No missions scheduled for today.",
         sort_by_name: "Sort by Name", sort_by_importance: "Sort by Importance", sort_by_custom: "Custom Order", sort_default: "Default",
+        btn_download_data: "Download Data", btn_load_data: "Load Data", confirm_load_file: "This will overwrite your current data with the contents of the file. Are you sure you want to continue?",
     },
     es: {
         nav_life_visualization: "Visualización", nav_life_balance: "Balance de Vida", nav_life_roles: "Roles de Vida", nav_life_skills: "Habilidades de Vida", nav_life_resources: "Recursos de Vida", nav_options: "Opciones", nav_today: "Hoy",
@@ -327,6 +331,7 @@ const translations = {
         primary_missions: "Misiones Primarias", secondary_missions: "Misiones Secundarias", btn_add_mission: "Añadir Misión", title_add_mission: "Añadir Misión", title_edit_mission: "Editar Misión", label_mission_name: "Nombre de la Misión", label_completion_date: "Fecha de Finalización",
         today_daily_routines: "Rutinas Diarias", today_primary_missions: "Misiones Primarias para Hoy", today_secondary_missions: "Misiones Secundarias para Hoy", no_routines_today: "No se encontraron rutinas diarias.", no_missions_today: "No hay misiones programadas para hoy.",
         sort_by_name: "Ordenar por Nombre", sort_by_importance: "Ordenar por Importancia", sort_by_custom: "Orden Personalizado", sort_default: "Predeterminado",
+        btn_download_data: "Descargar Datos", btn_load_data: "Cargar Datos", confirm_load_file: "Esto sobreescribirá tus datos actuales con el contenido del archivo. ¿Estás seguro de que quieres continuar?",
     }
 };
 
@@ -492,9 +497,6 @@ function setupLibrarySort() {
         showContextMenu(e.target, menuActions);
     });
 }
-
-
-let sortableInstances = [];
 
 function toggleSortable(enable) {
     const activeTabContent = document.querySelector('.tab-content.active');
@@ -2144,44 +2146,28 @@ function migrateRoleData(data) {
     }
 }
 
+function applyLoadedData(parsedData) {
+    if (!parsedData) return;
 
-function loadFromLocalStorage() {
-    const data = localStorage.getItem("lifeQualityAppData");
-    if (!data) {
-        dimensionLibraryData = JSON.parse(JSON.stringify(defaultAppData));
-        initializeDashboard();
-        return;
-    }
-
-    const parsed = JSON.parse(data);
-
-    migrateRoleData(parsed);
-
-    if(parsed.dimensionScores) {
+    if(parsedData.dimensionScores) {
         dimensions.forEach(dim => {
-            if (parsed.dimensionScores[dim.name] && inputs[dim.name]) {
-                inputs[dim.name].value = parsed.dimensionScores[dim.name].score;
+            if (parsedData.dimensionScores[dim.name] && inputs[dim.name]) {
+                inputs[dim.name].value = parsedData.dimensionScores[dim.name].score;
             }
         });
     }
 
-    const loadedLibrary = parsed.libraryData || {};
+    const loadedLibrary = parsedData.libraryData || {};
+    
     if (!loadedLibrary.resources) loadedLibrary.resources = [];
     if (!loadedLibrary.skills) loadedLibrary.skills = [];
     if (!loadedLibrary.wishlist) loadedLibrary.wishlist = [];
-    if (!loadedLibrary.financials) {
-        loadedLibrary.financials = { incomes: [], expenses: [], savings: [], investments: [], debts: [], monthlyIncomes: [], monthlyExpenses: [] };
-    }
+    if (!loadedLibrary.financials) loadedLibrary.financials = { incomes: [], expenses: [], savings: [], investments: [], debts: [], monthlyIncomes: [], monthlyExpenses: [] };
     const financialKeys = ['incomes', 'expenses', 'savings', 'investments', 'debts', 'monthlyIncomes', 'monthlyExpenses'];
     financialKeys.forEach(key => {
-        if (!loadedLibrary.financials || !loadedLibrary.financials[key]) {
-             if (!loadedLibrary.financials) loadedLibrary.financials = {};
-            loadedLibrary.financials[key] = [];
-        }
+        if (!loadedLibrary.financials[key]) loadedLibrary.financials[key] = [];
     });
-    if(!loadedLibrary.appSettings) {
-        loadedLibrary.appSettings = defaultAppData.appSettings;
-    }
+    if(!loadedLibrary.appSettings) loadedLibrary.appSettings = defaultAppData.appSettings;
     
     Object.values(loadedLibrary).forEach(dim => {
         if(dim && Array.isArray(dim.projects)) {
@@ -2197,16 +2183,101 @@ function loadFromLocalStorage() {
     const visArtboard = document.getElementById('visArtboard');
     if (visArtboard) {
         visArtboard.innerHTML = '';
-        if (parsed.visualizationData && Array.isArray(parsed.visualizationData)) {
-            parsed.visualizationData.forEach(imgData => {
+        if (parsedData.visualizationData && Array.isArray(parsedData.visualizationData)) {
+            parsedData.visualizationData.forEach(imgData => {
                 addImageToArtboard(imgData.src, imgData);
             });
         }
     }
 
     initializeDashboard();
-    console.log("Data loaded!");
 }
+
+function loadFromLocalStorage() {
+    const dataString = localStorage.getItem("lifeQualityAppData");
+    if (!dataString) {
+        dimensionLibraryData = JSON.parse(JSON.stringify(defaultAppData));
+        initializeDashboard();
+        return;
+    }
+    const parsed = JSON.parse(dataString);
+    migrateRoleData(parsed);
+    applyLoadedData(parsed);
+    console.log("Data loaded from Local Storage!");
+}
+
+function setupDataHandlers() {
+    const downloadBtn = document.getElementById('downloadDataBtn');
+    const loadBtn = document.getElementById('loadDataBtn');
+    const fileUploader = document.getElementById('fileUploader');
+
+    if (downloadBtn) downloadBtn.addEventListener('click', downloadData);
+    if (loadBtn) loadBtn.addEventListener('click', () => fileUploader.click());
+    if (fileUploader) fileUploader.addEventListener('change', handleFileUpload);
+}
+
+function downloadData() {
+    const allData = {
+        dimensionScores: dimensions.reduce((acc, dim) => ({ ...acc, [dim.name]: { score: parseFloat(inputs[dim.name].value) || 0 } }), {}),
+        libraryData: dimensionLibraryData,
+        visualizationData: [],
+    };
+
+    const visArtboard = document.getElementById('visArtboard');
+    if (visArtboard) {
+        visArtboard.querySelectorAll('.image-container').forEach(container => {
+            const img = container.querySelector('img');
+            if (img && img.src) {
+                allData.visualizationData.push({
+                    src: img.src,
+                    left: container.style.left,
+                    top: container.style.top,
+                    width: container.style.width,
+                    height: container.style.height,
+                });
+            }
+        });
+    }
+
+    const jsonString = JSON.stringify(allData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `livia-app-data-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data && data.libraryData && data.dimensionScores) {
+                if (confirm(getTranslation('confirm_load_file'))) {
+                    migrateRoleData(data);
+                    applyLoadedData(data);
+                    saveToLocalStorage(false);
+                    alert("Data loaded successfully!");
+                }
+            } else {
+                alert("Invalid or corrupted data file.");
+            }
+        } catch (error) {
+            alert("Error reading or parsing the file. Please ensure it's a valid JSON backup file.");
+            console.error("File load error:", error);
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
 
 function openProfileModal() {
     const { userName, userImage } = dimensionLibraryData.appSettings;

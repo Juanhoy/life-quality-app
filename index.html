@@ -34,6 +34,10 @@
                 <button id="optionsBtn" class="btn secondary-btn"><i class="fas fa-cog"></i> <span data-i18n="nav_options"></span></button>
                 <div class="button-group">
                     <button id="saveDataBtn" class="btn primary-btn"><i class="fas fa-arrow-down-to-bracket"></i> <span data-i18n="btn_save_data"></span></button>
+                    
+                    <button id="downloadDataBtn" class="btn secondary-btn"><i class="fas fa-download"></i> <span data-i18n="btn_download_data">Download Data</span></button>
+                    <button id="loadDataBtn" class="btn secondary-btn"><i class="fas fa-upload"></i> <span data-i18n="btn_load_data">Load Data</span></button>
+                    
                     <a href="https://paypal.me/juanjhoy" target="_blank" rel="noopener noreferrer" class="btn secondary-btn-positive">
                         <i class="fas fa-heart"></i> <span data-i18n="btn_donate"></span>
                     </a>
@@ -315,6 +319,7 @@
     <div id="financialItemModal" class="modal-overlay" style="display: none;"><div class="modal-content"><h3 id="financialModalTitle"></h3><div class="resource-form-inputs" style="padding-top: 15px;"><label><span data-i18n="label_name"></span>: <input type="text" id="financialNameInput"></label><label><span data-i18n="label_amount"></span>: <input type="number" id="financialAmountInput"></label><label><span data-i18n="label_date"></span>: <input type="date" id="financialDateInput"></label></div><div class="modal-actions"><button id="saveFinancialItemBtn" class="btn primary-btn" data-i18n="btn_save"></button><button id="deleteFinancialItemBtn" class="btn danger-btn" style="display: none;" data-i18n="btn_delete"></button><button id="cancelFinancialItemBtn" class="btn secondary-btn" data-i18n="btn_cancel"></button></div></div></div>
     <div id="optionsModal" class="modal-overlay" style="display: none;"><div class="modal-content"><h3 data-i18n="nav_options"></h3><div class="options-container"><div class="option-item"><label for="themeToggle" data-i18n="label_color_theme"></label><div class="toggle-switch"><input type="checkbox" id="themeToggle"><label for="themeToggle" class="slider"></label></div></div><div class="option-item"><label for="languageSelector" data-i18n="label_language"></label><select id="languageSelector"><option value="en">English</option><option value="es">Español</option></select></div></div><div class="modal-actions"><button id="closeOptionsBtn" class="btn primary-btn" data-i18n="btn_done"></button></div></div></div>
     
+    <input type="file" id="fileUploader" accept=".json" style="display: none;" />
     <script src="script.js"></script>
 </body>
 </html>
