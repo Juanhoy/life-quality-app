@@ -1188,3 +1188,123 @@ input:checked + .slider:before { transform: translateX(26px); }
 .library-list.sortable-active .library-item:active {
     cursor: grabbing;
 }
+
+/* (Add to the end of styles.css) */
+
+/* Diagnostic Modal Styles */
+#diagnosticModal .diagnostic-content {
+    width: 90%;
+    max-width: 700px;
+    height: 80vh;
+    max-height: 600px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.diagnostic-step {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+    gap: 20px;
+}
+
+.diagnostic-step.active {
+    display: flex;
+}
+
+.diagnostic-step h2 {
+    margin-bottom: 20px;
+    font-size: 2rem;
+    color: var(--accent-primary);
+}
+
+.diagnostic-step label {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+}
+
+.diagnostic-step textarea {
+    width: 100%;
+    min-height: 150px;
+    resize: vertical;
+    font-size: 1rem;
+    background-color: var(--bg-primary);
+}
+
+.diagnostic-step .dimension-rating-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.diagnostic-step input[type="range"] {
+    width: 80%;
+}
+#diagnosticScoreOutput {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+
+/* Navigation and Progress Bar */
+.diagnostic-nav {
+    margin-top: auto;
+    padding-top: 20px;
+    width: 100%;
+}
+
+.diagnostic-progress {
+    width: 100%;
+    height: 8px;
+    background-color: var(--bg-tertiary);
+    border-radius: 4px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.diagnostic-progress-bar {
+    width: 0%;
+    height: 100%;
+    background-color: var(--accent-primary);
+    transition: width 0.3s ease-in-out;
+}
+
+.diagnostic-buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* SVG Logo and Animation */
+#animatedLogo {
+    width: 150px;
+    height: 150px;
+    animation: draw-in 2s ease-in-out forwards;
+}
+
+#animatedLogo .heart-path {
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    animation: draw 2s 0.5s ease-out forwards;
+}
+
+@keyframes draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+#diagnosticModal[data-step-complete="true"] #animatedLogo {
+    animation: pulse 1.5s infinite;
+}
