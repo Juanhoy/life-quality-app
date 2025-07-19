@@ -1188,3 +1188,144 @@ input:checked + .slider:before { transform: translateX(26px); }
 .library-list.sortable-active .library-item:active {
     cursor: grabbing;
 }
+
+/* ---------------------------- */
+/* INTRO FORM STYLES (NEW)      */
+/* ---------------------------- */
+
+.intro-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(20, 20, 20, 0.85); /* Solid color with 85% opacity */
+    backdrop-filter: blur(10px); /* The blur effect */
+    -webkit-backdrop-filter: blur(10px); /* For Safari support */
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    z-index: 2000; /* Make sure it's on top of everything */
+    padding: 20px;
+}
+
+.intro-modal-content {
+    background: var(--bg-secondary);
+    padding: 40px;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 650px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    border: 1px solid var(--border-color);
+    position: relative;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.intro-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 2.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+.intro-close-btn:hover {
+    color: var(--text-primary);
+}
+
+.intro-logo {
+    max-width: 120px;
+    margin-bottom: 20px;
+}
+
+.intro-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 10px 0;
+}
+
+.intro-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin: 0 0 15px 0;
+    max-width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.intro-text {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin: 0 0 25px 0;
+}
+
+.intro-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+.intro-dimension-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 5px;
+    outline: none;
+    transition: opacity .2s;
+    cursor: pointer;
+}
+
+.intro-dimension-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    border: 3px solid var(--bg-secondary);
+}
+
+.intro-dimension-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    border: 3px solid var(--bg-secondary);
+}
+
+.intro-slider-value {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--accent-primary);
+    min-width: 50px; /* Ensures space for "100%" */
+}
+
+
+.intro-modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.intro-modal-actions .btn {
+    padding: 12px 30px;
+    font-size: 1.1rem;
+}
+
+/* Ensure the generic modal overlay click listener doesn't affect the intro */
+.modal-overlay#introModal {
+    /* This is just a marker, no specific style needed, the JS handles it */
+}

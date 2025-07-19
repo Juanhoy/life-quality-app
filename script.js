@@ -81,9 +81,14 @@ const defaultAppData = {
 };
 
 const dimensions = [
-    { key: "health", name: "Health", max: 50 }, { key: "family", name: "Family", max: 12 }, { key: "freedom", name: "Freedom", max: 5 },
-    { key: "community", name: "Community", max: 8 }, { key: "management", name: "Management", max: 10 }, { key: "learning", name: "Learning", max: 5 },
-    { key: "creation", name: "Creation", max: 5 }, { key: "fun", name: "Fun", max: 5 }
+    { key: "health", name: "Health", max: 50, subtitle: "How are your eating and sleeping habits? Do you exercise regularly?" },
+    { key: "family", name: "Family", max: 12, subtitle: "How would you describe the quality of your relationships with your family and loved ones?" },
+    { key: "freedom", name: "Freedom", max: 5, subtitle: "How much autonomy and independence do you feel you have in your life choices?" },
+    { key: "community", name: "Community", max: 8, subtitle: "Do you feel a sense of belonging and connection with the people and groups around you?" },
+    { key: "management", name: "Management", max: 10, subtitle: "How effectively are you managing your time, finances, and personal responsibilities?" },
+    { key: "learning", name: "Learning", max: 5, subtitle: "Are you actively acquiring new knowledge or skills, and challenging your mind?" },
+    { key: "creation", name: "Creation", max: 5, subtitle: "Are you expressing your creativity, building new things, or bringing ideas to life?" },
+    { key: "fun", name: "Fun", max: 5, subtitle: "How are you having fun, feeling pleasure, laughing, and getting excited?" }
 ];
 
 
@@ -102,6 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupManageRolesPage();
     setupLibrarySort();
     setupDataHandlers(); 
+    setupIntroForm(); // <-- Add this line
 
     document.getElementById("saveDataBtn").addEventListener("click", saveToLocalStorage);
 
@@ -144,6 +150,11 @@ document.addEventListener("DOMContentLoaded", () => {
         };
         document.head.appendChild(script);
     }
+    
+    // Check if the intro has been completed
+    if (localStorage.getItem('hasCompletedIntro') !== 'true') {
+        showIntroForm();
+    }
 });
 
 function initializeDashboard() {
@@ -168,11 +179,10 @@ function handleGlobalClick(event) {
         }
     });
 
+    // Close modals on overlay click, except for the intro modal
     const openModal = document.querySelector('.modal-overlay[style*="display: flex"]');
-    if (openModal && event.target === openModal) {
-        if (event.target === openModal) {
-            openModal.style.display = 'none';
-        }
+    if (openModal && event.target === openModal && openModal.id !== 'introModal') {
+        openModal.style.display = 'none';
     }
 }
 
@@ -201,6 +211,117 @@ function showPage(pageId, context = {}) {
         case 'wishlistPage': renderWishlistPage(); break;
     }
 }
+/*****************************************************************
+ * * INTRO FORM LOGIC (NEW)
+ * *****************************************************************/
+
+let currentIntroStep = 0;
+const totalIntroSteps = 9;
+let introDimensionScores = {};
+
+function setupIntroForm() {
+    const introModal = document.getElementById('introModal');
+    const closeBtn = document.querySelector('.intro-close-btn');
+    const prevBtn = document.getElementById('introPrevBtn');
+    const nextBtn = document.getElementById('introNextBtn');
+    const finishBtn = document.getElementById('introFinishBtn');
+
+    closeBtn.addEventListener('click', closeIntroForm);
+    introModal.addEventListener('click', (e) => {
+        if (e.target === introModal) {
+            closeIntroForm();
+        }
+    });
+
+    nextBtn.addEventListener('click', () => {
+        if (currentIntroStep < totalIntroSteps - 1) {
+            currentIntroStep++;
+            renderIntroStep(currentIntroStep);
+        }
+    });
+
+    prevBtn.addEventListener('click', () => {
+        if (currentIntroStep > 0) {
+            currentIntroStep--;
+            renderIntroStep(currentIntroStep);
+        }
+    });
+
+    finishBtn.addEventListener('click', finishIntro);
+    
+    // Setup listeners for all sliders
+    document.querySelectorAll('.intro-dimension-slider').forEach(slider => {
+        slider.addEventListener('input', (e) => {
+            const dimensionKey = e.target.dataset.dimension;
+            const value = e.target.value;
+            document.getElementById(`intro-slider-value-${dimensionKey}`).textContent = `${value}%`;
+            introDimensionScores[dimensionKey] = value;
+        });
+    });
+}
+
+function showIntroForm() {
+    currentIntroStep = 0;
+    renderIntroStep(currentIntroStep);
+    document.getElementById('introModal').style.display = 'flex';
+}
+
+function closeIntroForm() {
+    document.getElementById('introModal').style.display = 'none';
+}
+
+function renderIntroStep(step) {
+    // Hide all steps
+    document.querySelectorAll('.intro-step').forEach(s => s.style.display = 'none');
+
+    // Show current step
+    document.getElementById(`intro-step-${step}`).style.display = 'block';
+
+    const prevBtn = document.getElementById('introPrevBtn');
+    const nextBtn = document.getElementById('introNextBtn');
+    const finishBtn = document.getElementById('introFinishBtn');
+
+    // Update button visibility
+    prevBtn.style.display = (step === 0) ? 'none' : 'inline-flex';
+    nextBtn.style.display = (step === totalIntroSteps - 1) ? 'none' : 'inline-flex';
+    finishBtn.style.display = (step === totalIntroSteps - 1) ? 'inline-flex' : 'none';
+
+    // If it's a dimension step, dynamically update the content
+    if (step > 0) {
+        const dimensionIndex = step - 1;
+        const dimension = dimensions[dimensionIndex];
+        const stepElement = document.getElementById(`intro-step-${step}`);
+        
+        stepElement.querySelector('.intro-title').textContent = dimension.name;
+        stepElement.querySelector('.intro-subtitle').textContent = dimension.subtitle;
+        stepElement.querySelector('.intro-text').innerHTML = `Please give the quality of your <strong>"${dimension.name}"</strong> a score from 0 to 100%.`;
+        
+        // Ensure the slider value display is up-to-date
+        const slider = stepElement.querySelector('.intro-dimension-slider');
+        const currentValue = slider.value;
+        stepElement.querySelector('.intro-slider-value').textContent = `${currentValue}%`;
+    }
+}
+
+
+function finishIntro() {
+    // Apply the scores from the intro form
+    for (const dimKey in introDimensionScores) {
+        const dimension = dimensions.find(d => d.key === dimKey);
+        if (dimension && inputs[dimension.name]) {
+            inputs[dimension.name].value = introDimensionScores[dimKey];
+        }
+    }
+    
+    updateLifeQuality(); // This updates the chart and progress bar
+    saveToLocalStorage(false); // Save the new scores silently
+
+    // Mark intro as completed
+    localStorage.setItem('hasCompletedIntro', 'true');
+    
+    closeIntroForm();
+}
+
 
 /*****************************************************************
  * * OPTIONS & THEME SETUP
